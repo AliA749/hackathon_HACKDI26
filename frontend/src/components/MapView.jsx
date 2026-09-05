@@ -72,17 +72,18 @@ export default function MapView({ listings, pendingPin, onMapClick, onBoundsChan
 			  rotation) throttles/403s under any real traffic - which on a
 			  shared hackathon WiFi with several teams hitting it at once
 			  shows up as blank gray tiles the moment you pan ("ghosting").
-			  CARTO's basemap CDN is built for exactly this kind of demo
-			  traffic and needs no API key. keepBuffer preloads a wider ring
-			  of tiles around the viewport so panning doesn't outrun the
-			  cache either.
+			  CARTO's free raster tiles are no longer an option: they now
+			  stamp "API KEY REQUIRED" diagonally across every image. Stadia's
+			  "OSM Bright" is keyless on localhost and reads like a nav app.
+			  It serves from one host, so the subdomains prop is gone.
+			  keepBuffer preloads a wider ring of tiles around the viewport
+			  so panning doesn't outrun the cache either.
 			*/}
 			<TileLayer
-				url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-				subdomains="abcd"
+				url="https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png"
 				maxZoom={20}
 				keepBuffer={6}
-				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+				attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 			/>
 			<MapEvents onMapClick={onMapClick} onBoundsChange={onBoundsChange} />
 			<InvalidateOnResize />

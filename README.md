@@ -95,9 +95,18 @@ a field-level `errors` map instead of a generic error page.
   `frontend/src/constants/bounds.js` (map click-eligible area). A previous
   mismatch between these two is what caused pins near the state border to
   silently fail to save.
-- **Map tiles use CARTO's basemap CDN**, not `tile.openstreetmap.org`
+- **Map tiles use Stadia's "OSM Bright"**, not `tile.openstreetmap.org`
   directly - the latter throttles/blocks under shared-network hackathon
   traffic, which showed up as blank gray tiles ("ghosting") when panning.
+  CARTO's free raster tiles are **not** a substitute: they now stamp
+  "API KEY REQUIRED" across every image. Stadia is keyless on `localhost`;
+  for a public domain, get a free key at <https://client.stadiamaps.com/signup/>
+  and append `?api_key=YOUR_KEY` to the tile URL.
+- **`leaflet.css` is loaded from a CDN with an SRI hash** in
+  `frontend/index.html`. If that hash is ever wrong the browser silently
+  discards the stylesheet, and Leaflet renders as scattered tiles with dead
+  zoom controls - it looks like a tile-server problem but is not. The
+  correct 1.9.4 hash is `sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=`.
 
 ## Team Split
 
