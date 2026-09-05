@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+@InNewJersey
 public record BusinessListingRequest(
 		@NotBlank @Size(max = 80) String ownerName,
 		@NotBlank @Size(max = 100) String businessName,
