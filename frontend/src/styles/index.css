@@ -1,386 +1,118 @@
-/*
- * Functional boilerplate styling only. Whoever owns UI design, restyle
- * freely - the class names below are the only contract the JS relies on.
- */
-:root {
-	--paper: #f7f3e8;
-	--ink: #16302b;
-	--cedar: #7a3f2d;
-	--mint: #2f8f70;
-	--gold: #c59b2d;
-	--slate: #40514d;
-	--line: rgba(22, 48, 43, 0.18);
-	--surface: rgba(255, 253, 246, 0.94);
-	--shadow: 0 18px 48px rgba(22, 48, 43, 0.18);
-	font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	color: var(--ink);
-	background: var(--paper);
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-* {
-	box-sizing: border-box;
-}
+@layer base {
+	html,
+	body,
+	#root {
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+	}
 
-html,
-body,
-#root {
-	width: 100%;
-	height: 100%;
-	margin: 0;
-}
+	body {
+		overscroll-behavior: none;
+		font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+		background: theme("colors.surface");
+		color: theme("colors.on-surface");
+		-webkit-font-smoothing: antialiased;
+	}
 
-button,
-input,
-select,
-textarea {
-	font: inherit;
-}
+	button {
+		cursor: pointer;
+	}
 
-button {
-	cursor: pointer;
-}
-
-h1,
-h2,
-p {
-	margin: 0;
-}
-
-.app-shell {
-	position: relative;
-	display: grid;
-	grid-template-columns: minmax(320px, 390px) 1fr;
 	/*
-	  The row MUST be explicitly sized. With an implicit auto row, the map
-	  container's height becomes content-driven, and Leaflet's invalidateSize()
-	  then grows the container -> ResizeObserver fires -> invalidateSize again,
-	  a feedback loop that spawns thousands of tiles and kills the map.
-	*/
-	grid-template-rows: minmax(0, 1fr);
-	width: 100vw;
-	height: 100vh;
-	overflow: hidden;
+	 * Google ships Material Symbols as a variable icon font: the element's text
+	 * content is the glyph name ("search"), and the ligature turns it into the
+	 * icon. Without `font-feature-settings: 'liga'` you get the literal word.
+	 */
+	.material-symbols-outlined {
+		font-family: "Material Symbols Outlined";
+		font-weight: normal;
+		font-style: normal;
+		line-height: 1;
+		letter-spacing: normal;
+		text-transform: none;
+		display: inline-block;
+		white-space: nowrap;
+		word-wrap: normal;
+		direction: ltr;
+		font-feature-settings: "liga";
+		-webkit-font-feature-settings: "liga";
+		-webkit-font-smoothing: antialiased;
+		font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+	}
+
+	.material-symbols-outlined.filled {
+		font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+	}
 }
 
-/* Grid/flex children default to min-height:auto, which lets content push a
-   track past its bounds. Pin them so the map can never grow the layout. */
-.directory,
-.map-stage {
-	min-width: 0;
-	min-height: 0;
+@layer utilities {
+	/* The mock hides scrollbars everywhere; keep the rails scrollable but bare. */
+	.scrollbar-none {
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.scrollbar-none::-webkit-scrollbar {
+		display: none;
+	}
 }
 
-.directory {
-	z-index: 500;
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-	padding: 22px;
-	background: var(--surface);
-	border-right: 1px solid var(--line);
-	box-shadow: var(--shadow);
-	overflow: hidden;
-}
-
-.brand-block {
-	display: grid;
-	grid-template-columns: 54px 1fr;
-	gap: 14px;
-	align-items: center;
-}
-
-.brand-mark {
-	display: grid;
-	place-items: center;
-	width: 54px;
-	height: 54px;
-	border-radius: 8px;
-	background: var(--ink);
-	color: var(--paper);
-	font-weight: 800;
-}
-
-h1 {
-	font-size: 1.55rem;
-	line-height: 1.05;
-}
-
-.brand-block p {
-	max-width: 31ch;
-	margin-top: 6px;
-	font-size: 0.94rem;
-	color: var(--slate);
-	line-height: 1.45;
-}
-
-.search-bar {
-	display: grid;
-	grid-template-columns: 1fr auto auto;
-	gap: 8px;
-}
-
-.search-bar input,
-.search-bar select {
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	padding: 10px 12px;
-	background: #fff;
-}
-
-.primary-button,
-.icon-button {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 8px;
-	min-height: 44px;
-	border: 0;
-	border-radius: 8px;
-	font-weight: 750;
-}
-
-.primary-button {
-	padding: 0 16px;
-	background: var(--mint);
-	color: #ffffff;
-}
-
-.primary-button:hover,
-.primary-button:focus-visible {
-	background: #257b60;
-}
-
-.icon-button {
-	width: 44px;
-	padding: 0;
-	background: #ffffff;
-	color: var(--ink);
-	border: 1px solid var(--line);
-}
-
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-	outline: 3px solid rgba(197, 155, 45, 0.45);
-	outline-offset: 2px;
-}
-
-.status-panel {
-	padding: 12px 14px;
-	background: #ffffff;
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	font-size: 0.9rem;
-	color: var(--slate);
-}
-
-.listings {
-	min-height: 0;
-	overflow: auto;
-	padding-right: 4px;
-}
-
-.empty-state {
-	color: var(--slate);
-	font-size: 0.9rem;
-}
-
-.listing-list {
-	display: grid;
-	gap: 10px;
-}
-
-.listing-card {
-	display: grid;
-	gap: 8px;
-	padding: 14px;
-	background: #ffffff;
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	text-align: left;
-}
-
-.listing-card button {
-	all: unset;
-	cursor: pointer;
-	display: block;
-}
-
-.listing-card h3 {
-	margin: 0;
-	font-size: 1rem;
-	line-height: 1.2;
-}
-
-.listing-card p {
-	font-size: 0.91rem;
-	color: var(--slate);
-}
-
-.meta {
-	color: var(--slate);
-	font-size: 0.85rem;
-}
-
-.category-pill {
-	width: fit-content;
-	padding: 4px 8px;
-	border-radius: 999px;
-	background: rgba(47, 143, 112, 0.12);
-	color: #1d6d55;
-	font-size: 0.78rem;
-	font-weight: 800;
-}
-
-.listing-link {
-	color: var(--cedar);
-	font-weight: 800;
-	text-decoration: none;
-	overflow-wrap: anywhere;
-}
-
-.listing-link:hover,
-.listing-link:focus-visible {
-	text-decoration: underline;
-}
-
-.map-stage,
-.map-container {
-	width: 100%;
-	height: 100%;
-}
-
+/*
+ * ---------------------------------------------------------------------------
+ * Leaflet overrides
+ * ---------------------------------------------------------------------------
+ * These target Leaflet's own class names, which Tailwind cannot reach because
+ * the markup is generated inside the library.
+ */
 .leaflet-container {
 	font-family: inherit;
-	background: #d9e8df;
+	background: #fbf9f5;
 }
 
-.business-marker {
-	display: grid;
-	place-items: center;
-	width: 34px;
-	height: 34px;
-	border-radius: 50%;
-	background: var(--mint);
-	border: 3px solid #ffffff;
-	color: #ffffff;
-	font-weight: 900;
-	box-shadow: 0 8px 18px rgba(22, 48, 43, 0.26);
+/* Leaflet's default controls are replaced by the floating stack in MapView. */
+.leaflet-control-zoom,
+.leaflet-control-attribution a {
+	font-family: inherit;
 }
 
-.business-marker.pending {
-	background: var(--gold);
-	color: var(--ink);
+.leaflet-control-attribution {
+	background: rgba(255, 255, 255, 0.85) !important;
+	backdrop-filter: blur(8px);
+	border-radius: 8px 0 0 0;
+	font-size: 10px;
+	color: theme("colors.outline");
 }
 
-.popup {
-	display: grid;
-	gap: 6px;
-	max-width: 240px;
+/* Popups are rendered by Leaflet; strip its chrome so ours shows through. */
+.leaflet-popup-content-wrapper {
+	padding: 0;
+	border-radius: 16px;
+	box-shadow: 0 16px 40px rgba(13, 92, 70, 0.2);
+	overflow: hidden;
 }
 
-.popup h3 {
+.leaflet-popup-content {
 	margin: 0;
-	font-size: 1rem;
+	width: auto !important;
+	font-family: inherit;
 }
 
-.composer {
-	position: absolute;
-	z-index: 700;
-	top: 18px;
-	right: 18px;
-	width: min(380px, calc(100vw - 36px));
-	max-height: calc(100vh - 36px);
+.leaflet-popup-tip {
+	box-shadow: none;
+}
+
+.leaflet-popup-close-button {
 	display: none;
-	flex-direction: column;
-	gap: 16px;
-	padding: 18px;
-	background: var(--surface);
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	box-shadow: var(--shadow);
-	overflow: auto;
 }
 
-.composer.open {
-	display: flex;
-}
-
-.composer-header {
-	display: flex;
-	justify-content: space-between;
-	gap: 14px;
-	align-items: flex-start;
-}
-
-.composer h2 {
-	font-size: 1.2rem;
-	line-height: 1.2;
-}
-
-form {
-	display: grid;
-	gap: 13px;
-}
-
-label {
-	display: grid;
-	gap: 6px;
-	font-size: 0.9rem;
-	font-weight: 780;
-}
-
-input,
-select,
-textarea {
-	width: 100%;
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	padding: 11px 12px;
-	background: #ffffff;
-	color: var(--ink);
-}
-
-textarea {
-	min-height: 120px;
-	resize: vertical;
-}
-
-.form-message {
-	min-height: 20px;
-	color: var(--cedar);
-	font-weight: 700;
-	line-height: 1.35;
-}
-
-.submit-button {
-	width: 100%;
-}
-
-@media (max-width: 860px) {
-	.app-shell {
-		grid-template-columns: 1fr;
-		grid-template-rows: 58vh 42vh;
-	}
-
-	.map-stage {
-		grid-row: 1;
-	}
-
-	.directory {
-		grid-row: 2;
-		border-right: 0;
-		border-top: 1px solid var(--line);
-		padding: 16px;
-	}
-
-	.composer {
-		top: auto;
-		right: 10px;
-		bottom: 10px;
-		left: 10px;
-		width: auto;
-		max-height: min(76vh, 620px);
-	}
+/* divIcon wrappers carry Leaflet's own sizing; let our markup define the box. */
+.pin-marker-icon {
+	background: transparent;
+	border: 0;
 }
