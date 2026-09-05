@@ -1,0 +1,150 @@
+{
+  "status": "success",
+  "total_records": 12,
+  "data": [
+    {
+      "id": "biz_001",
+      "name": "Platter House",
+      "category": "Restaurant (Mediterranean)",
+      "address": "540 Cedar Ln",
+      "city": "Teaneck",
+      "state": "NJ",
+      "zip_code": "07666",
+      "latitude": 40.8875,
+      "longitude": -74.0211,
+      "verification_source": "Zabihah Verified / North Jersey Halal Index"
+    },
+    {
+      "id": "biz_002",
+      "name": "Halal Wok Express",
+      "category": "Restaurant (Halal Chinese Fusion)",
+      "address": "959 Main St",
+      "city": "Paterson",
+      "state": "NJ",
+      "zip_code": "07503",
+      "latitude": 40.8988,
+      "longitude": -74.1678,
+      "verification_source": "Passaic County Muslim Business Network"
+    },
+    {
+      "id": "biz_003",
+      "name": "Madina Halal Platters",
+      "category": "Restaurant (Street Style)",
+      "address": "238B Market St",
+      "city": "Elmwood Park",
+      "state": "NJ",
+      "zip_code": "07407",
+      "latitude": 40.9023,
+      "longitude": -74.1194,
+      "verification_source": "Zabihah Verified"
+    },
+    {
+      "id": "biz_004",
+      "name": "The Halal Joint",
+      "category": "Restaurant (Fast Casual)",
+      "address": "402 Valley Brook Ave",
+      "city": "Lyndhurst",
+      "state": "NJ",
+      "zip_code": "07071",
+      "latitude": 40.8122,
+      "longitude": -74.1171,
+      "verification_source": "North Jersey Halal Index"
+    },
+    {
+      "id": "biz_005",
+      "name": "Bereket Marketplace",
+      "category": "Grocery & Halal Butcher",
+      "address": "3790 US-1",
+      "city": "Monmouth Junction",
+      "state": "NJ",
+      "zip_code": "08852",
+      "latitude": 40.3957,
+      "longitude": -74.5519,
+      "verification_source": "ISCJ Business Directory"
+    },
+    {
+      "id": "biz_006",
+      "name": "Burda Islamic Clothing",
+      "category": "Modest Fashion Retail",
+      "address": "1312 Centennial Ave",
+      "city": "Piscataway",
+      "state": "NJ",
+      "zip_code": "08854",
+      "latitude": 40.5481,
+      "longitude": -74.4642,
+      "verification_source": "MPG Connects Middlesex"
+    },
+    {
+      "id": "biz_007",
+      "name": "Musa Halal Meat",
+      "category": "Grocery & Halal Butcher",
+      "address": "100 Plainfield Ave",
+      "city": "Edison",
+      "state": "NJ",
+      "zip_code": "08817",
+      "latitude": 40.5218,
+      "longitude": -74.4287,
+      "verification_source": "HMS Certified Database"
+    },
+    {
+      "id": "biz_008",
+      "name": "Jersey Platters",
+      "category": "Restaurant (Fast Casual)",
+      "address": "214 Dayton Ave",
+      "city": "Clifton",
+      "state": "NJ",
+      "zip_code": "07011",
+      "latitude": 40.8719,
+      "longitude": -74.1376,
+      "verification_source": "Zabihah Verified"
+    },
+    {
+      "id": "biz_009",
+      "name": "Korai Kitchen",
+      "category": "Restaurant (Bengali Cuisine)",
+      "address": "576 Summit Ave",
+      "city": "Jersey City",
+      "state": "NJ",
+      "zip_code": "07306",
+      "latitude": 40.7332,
+      "longitude": -74.0628,
+      "verification_source": "Zabihah / National Muslim Directory"
+    },
+    {
+      "id": "biz_010",
+      "name": "Tehzib Saiyed Real Estate",
+      "category": "Professional Services",
+      "address": "495 Route 1",
+      "city": "Edison",
+      "state": "NJ",
+      "zip_code": "08817",
+      "latitude": 40.5185,
+      "longitude": -74.4098,
+      "verification_source": "MPG Connects Middlesex"
+    },
+    {
+      "id": "biz_011",
+      "name": "OliveTree Early Learning",
+      "category": "Education & Childcare",
+      "address": "20 Nassau St",
+      "city": "Princeton",
+      "state": "NJ",
+      "zip_code": "08542",
+      "latitude": 40.3493,
+      "longitude": -74.6596,
+      "verification_source": "ISCJ Network"
+    },
+    {
+      "id": "biz_012",
+      "name": "Waffle & Kebab",
+      "category": "Restaurant (Pakistani/American)",
+      "address": "2427 Plainfield Ave",
+      "city": "South Plainfield",
+      "state": "NJ",
+      "zip_code": "07080",
+      "latitude": 40.5695,
+      "longitude": -74.4258,
+      "verification_source": "HMS Certified Database"
+    }
+  ]
+}
