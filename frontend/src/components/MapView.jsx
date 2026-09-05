@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { GeoJSON, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { NJ_BOUNDS, NJ_CENTER, NJ_VIEW_BOUNDS } from "../constants/bounds.js";
 import { displayCategory } from "../constants/categories.js";
 import { categoryIcon, pendingIcon } from "./markerIcons.js";
@@ -55,7 +55,7 @@ function InvalidateOnResize() {
 	return null;
 }
 
-export default function MapView({ listings, pendingPin, onMapClick, onBoundsChange, mapRef }) {
+export default function MapView({ listings, boundary, pendingPin, onMapClick, onBoundsChange, mapRef }) {
 	return (
 		<MapContainer
 			center={NJ_CENTER}
@@ -86,6 +86,15 @@ export default function MapView({ listings, pendingPin, onMapClick, onBoundsChan
 			/>
 			<MapEvents onMapClick={onMapClick} onBoundsChange={onBoundsChange} />
 			<InvalidateOnResize />
+
+			{/* Shows users exactly where they're allowed to drop a pin. */}
+			{boundary && (
+				<GeoJSON
+					data={boundary}
+					interactive={false}
+					style={{ color: "#2f8f70", weight: 2, fillColor: "#2f8f70", fillOpacity: 0.06 }}
+				/>
+			)}
 
 			{listings.map((listing) => (
 				<Marker

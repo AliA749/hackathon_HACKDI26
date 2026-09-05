@@ -29,5 +29,5 @@ export function useListings() {
 		return created;
 	}, []);
 
-	return { listings, status, loadListings, addListing };
+	return { listings, status, setStatus, loadListings, addListing };
 }
