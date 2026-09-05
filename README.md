@@ -1,52 +1,71 @@
 # Ummah Local NJ
 
-A Spring Boot hackathon prototype for a Muslim-focused New Jersey business map.
-Users can open the locally hosted website, browse a movable map, share their
-approximate one-mile area, click a location, and post a community business note
-with a website or booking link.
+A geolocation-based discovery platform for Muslim-owned and Muslim-serving
+businesses across New Jersey. Users browse a map, see business pins, and drop
+their own pin with a short listing - no account required.
+
+See [`PRD.md`](PRD.md) for the full product requirements document.
+
+## Architecture
+
+```text
+frontend/                React + Vite + react-leaflet (port 5173, dev)
+  Leaflet map locked to a New Jersey bounding box
+  Search bar (keyword + category) over the current map view
+  Click-to-post modal -> POST /api/listings
+  Vite dev server proxies /api/* to the backend, no CORS setup needed in dev
+
+muslim-local-nj/         Spring Boot backend (port 8080)
+  /api/listings REST controller (list/search + create)
+  Jakarta Bean Validation, incl. shared New Jersey coordinate bounds
+  Spring Data JPA repository with an optional-filter search query
+  Postgres via docker-compose for local dev
+```
 
 ## Local Run
+
+**1. Start Postgres:**
+
+```powershell
+cd muslim-local-nj
+docker compose up -d
+```
+
+**2. Start the backend** (talks to Postgres on localhost:5432, see
+`application.properties` for overridable env vars):
 
 ```powershell
 cd muslim-local-nj
 .\mvnw.cmd spring-boot:run
 ```
 
-Then open `http://localhost:8080`.
+**3. Start the frontend:**
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`. The Vite dev server proxies `/api/*` calls to
+the backend on `:8080`.
 
 ## Demo Flow
 
-1. Open the app and browse the New Jersey map.
-2. Click `Use my location` to draw an approximate one-mile circle around the
-   browser location.
-3. Click the map where a business is located.
-4. Fill out the business form and publish the pin.
-5. Select pins or directory cards to view posts from other local users.
-
-## Architecture
-
-```text
-Browser frontend
-  Static HTML/CSS/JS served by Spring Boot
-  Leaflet + OpenStreetMap tiles for map movement and pins
-  Browser Geolocation API for approximate one-mile radius
-
-Spring Boot backend
-  /api/listings REST controller
-  Jakarta validation for form inputs and New Jersey coordinate bounds
-  Spring Data JPA repository
-
-H2 database
-  File-backed local database at muslim-local-nj/data/
-  Seed records for first-run demo content
-```
+1. Open the app - map loads centered on New Jersey, existing pins appear.
+2. Search by keyword or category to filter what's on the map and in the list.
+3. Click anywhere inside New Jersey to open the posting form.
+4. Fill out the business form and publish - the pin appears immediately.
+5. Pan/zoom the map or click a directory card to jump between listings.
 
 ## API
 
 `GET /api/listings`
 
-Returns all listings, newest first. Optional query params:
-`minLat`, `maxLat`, `minLng`, `maxLng`.
+Optional query params, all combinable: `minLat`, `maxLat`, `minLng`, `maxLng`
+(pins in the current map view), `q` (keyword search over business name and
+description), `category` (exact match against `BusinessCategory`). No params
+returns everything, newest first.
 
 `POST /api/listings`
 
@@ -62,16 +81,33 @@ Returns all listings, newest first. Optional query params:
 }
 ```
 
+A validation failure (e.g. coordinates outside New Jersey) returns `400` with
+a field-level `errors` map instead of a generic error page.
+
+## Notable Decisions
+
+- **No login/signup.** Posting is anonymous-by-name (`ownerName` is free
+  text). This trades away moderation/spam control for zero auth-flow build
+  time - see `PRD.md` for the tradeoff and the moderation follow-ups it
+  implies.
+- **New Jersey bounds live in exactly two places** and must stay identical:
+  `muslim-local-nj/.../listing/NjBounds.java` (backend validation) and
+  `frontend/src/constants/bounds.js` (map click-eligible area). A previous
+  mismatch between these two is what caused pins near the state border to
+  silently fail to save.
+- **Map tiles use CARTO's basemap CDN**, not `tile.openstreetmap.org`
+  directly - the latter throttles/blocks under shared-network hackathon
+  traffic, which showed up as blank gray tiles ("ghosting") when panning.
+
 ## Team Split
 
-- Backend member: listing model, validation, REST API, persistence.
-- Frontend member: map UX, geolocation, posting drawer, responsive layout.
-- Architecture/demo member: README, presentation flow, acceptance testing, future
-  roadmap.
+- Backend: listing model, validation, REST API, persistence, search.
+- Frontend (x2): map UX, search/filter UI, posting composer, responsive
+  layout and visual design.
 
 ## Future Enhancements
 
-- User accounts and moderation queue.
-- Business search by category, masjid area, city, or halal certification.
-- Photo uploads and verified owner profiles.
-- Production database such as PostgreSQL.
+- Optional owner accounts for editing/removing your own listing.
+- Moderation queue / report button now that anyone can post.
+- Photo uploads and verified/claimed business badges.
+- Flyway/Liquibase migrations instead of `ddl-auto=update`.

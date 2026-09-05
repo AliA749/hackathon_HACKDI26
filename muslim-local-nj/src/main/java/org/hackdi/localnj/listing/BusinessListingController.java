@@ -2,7 +2,6 @@ package org.hackdi.localnj.listing;
 
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,22 +21,26 @@ public class BusinessListingController {
 		this.repository = repository;
 	}
 
+	/**
+	 * Fetches pins. All params are optional and composable:
+	 * <ul>
+	 *   <li>no params -&gt; every listing, newest first</li>
+	 *   <li>minLat/maxLat/minLng/maxLng -&gt; pins inside the current map bounds</li>
+	 *   <li>q -&gt; keyword search against business name and description</li>
+	 *   <li>category -&gt; filter by category</li>
+	 * </ul>
+	 * Bounds and search/category can be combined, e.g. "search this area".
+	 */
 	@GetMapping
 	public List<BusinessListingResponse> list(
 			@RequestParam(required = false) Double minLat,
 			@RequestParam(required = false) Double maxLat,
 			@RequestParam(required = false) Double minLng,
-			@RequestParam(required = false) Double maxLng) {
-		List<BusinessListing> listings;
-		if (minLat != null && maxLat != null && minLng != null && maxLng != null) {
-			listings = repository.findByLatitudeBetweenAndLongitudeBetweenOrderByCreatedAtDesc(
-					minLat, maxLat, minLng, maxLng);
-		}
-		else {
-			listings = repository.findAll().stream()
-				.sorted(Comparator.comparing(BusinessListing::getCreatedAt).reversed())
-				.toList();
-		}
+			@RequestParam(required = false) Double maxLng,
+			@RequestParam(required = false) BusinessCategory category,
+			@RequestParam(required = false) String q) {
+		String query = (q == null || q.isBlank()) ? null : q.trim();
+		List<BusinessListing> listings = repository.search(minLat, maxLat, minLng, maxLng, category, query);
 		return listings.stream().map(this::toResponse).toList();
 	}
 

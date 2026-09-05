@@ -3,7 +3,8 @@
     "allow": [
       "Bash(gh api *)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(npx skills *)"
+      "Bash(npx skills *)",
+      "Bash(wsl.exe *)"
     ]
   }
 }

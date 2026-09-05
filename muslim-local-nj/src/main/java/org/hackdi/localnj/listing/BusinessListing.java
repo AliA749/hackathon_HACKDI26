@@ -43,13 +43,13 @@ public class BusinessListing {
 	private String websiteUrl;
 
 	@NotNull
-	@DecimalMin("38.70")
-	@DecimalMax("41.40")
+	@DecimalMin(NjBounds.MIN_LAT)
+	@DecimalMax(NjBounds.MAX_LAT)
 	private Double latitude;
 
 	@NotNull
-	@DecimalMin("-75.70")
-	@DecimalMax("-73.80")
+	@DecimalMin(NjBounds.MIN_LNG)
+	@DecimalMax(NjBounds.MAX_LNG)
 	private Double longitude;
 
 	private Instant createdAt;

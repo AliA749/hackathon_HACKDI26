@@ -1,3 +1,7 @@
+/*
+ * Functional boilerplate styling only. Whoever owns UI design, restyle
+ * freely - the class names below are the only contract the JS relies on.
+ */
 :root {
 	--paper: #f7f3e8;
 	--ink: #16302b;
@@ -18,7 +22,8 @@
 }
 
 html,
-body {
+body,
+#root {
 	width: 100%;
 	height: 100%;
 	margin: 0;
@@ -35,20 +40,41 @@ button {
 	cursor: pointer;
 }
 
+h1,
+h2,
+p {
+	margin: 0;
+}
+
 .app-shell {
 	position: relative;
 	display: grid;
 	grid-template-columns: minmax(320px, 390px) 1fr;
+	/*
+	  The row MUST be explicitly sized. With an implicit auto row, the map
+	  container's height becomes content-driven, and Leaflet's invalidateSize()
+	  then grows the container -> ResizeObserver fires -> invalidateSize again,
+	  a feedback loop that spawns thousands of tiles and kills the map.
+	*/
+	grid-template-rows: minmax(0, 1fr);
 	width: 100vw;
 	height: 100vh;
 	overflow: hidden;
+}
+
+/* Grid/flex children default to min-height:auto, which lets content push a
+   track past its bounds. Pin them so the map can never grow the layout. */
+.directory,
+.map-stage {
+	min-width: 0;
+	min-height: 0;
 }
 
 .directory {
 	z-index: 500;
 	display: flex;
 	flex-direction: column;
-	gap: 18px;
+	gap: 16px;
 	padding: 22px;
 	background: var(--surface);
 	border-right: 1px solid var(--line);
@@ -74,36 +100,31 @@ button {
 	font-weight: 800;
 }
 
-h1,
-h2,
-p {
-	margin: 0;
-}
-
 h1 {
 	font-size: 1.55rem;
 	line-height: 1.05;
-}
-
-.brand-block p,
-.composer-header p,
-.status-panel span,
-.listing-card p,
-.meta {
-	color: var(--slate);
-	line-height: 1.45;
 }
 
 .brand-block p {
 	max-width: 31ch;
 	margin-top: 6px;
 	font-size: 0.94rem;
+	color: var(--slate);
+	line-height: 1.45;
 }
 
-.toolbar {
-	display: flex;
-	gap: 10px;
-	align-items: center;
+.search-bar {
+	display: grid;
+	grid-template-columns: 1fr auto auto;
+	gap: 8px;
+}
+
+.search-bar input,
+.search-bar select {
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	padding: 10px 12px;
+	background: #fff;
 }
 
 .primary-button,
@@ -137,12 +158,6 @@ h1 {
 	border: 1px solid var(--line);
 }
 
-.icon-button:hover,
-.icon-button:focus-visible {
-	border-color: var(--mint);
-	color: var(--mint);
-}
-
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
@@ -152,26 +167,23 @@ textarea:focus-visible {
 }
 
 .status-panel {
-	display: grid;
-	gap: 5px;
-	padding: 14px;
+	padding: 12px 14px;
 	background: #ffffff;
 	border: 1px solid var(--line);
 	border-radius: 8px;
-}
-
-.status-panel strong {
-	font-size: 0.96rem;
-}
-
-.status-panel span {
-	font-size: 0.88rem;
+	font-size: 0.9rem;
+	color: var(--slate);
 }
 
 .listings {
 	min-height: 0;
 	overflow: auto;
 	padding-right: 4px;
+}
+
+.empty-state {
+	color: var(--slate);
+	font-size: 0.9rem;
 }
 
 .listing-list {
@@ -192,6 +204,7 @@ textarea:focus-visible {
 .listing-card button {
 	all: unset;
 	cursor: pointer;
+	display: block;
 }
 
 .listing-card h3 {
@@ -202,6 +215,12 @@ textarea:focus-visible {
 
 .listing-card p {
 	font-size: 0.91rem;
+	color: var(--slate);
+}
+
+.meta {
+	color: var(--slate);
+	font-size: 0.85rem;
 }
 
 .category-pill {
@@ -227,7 +246,7 @@ textarea:focus-visible {
 }
 
 .map-stage,
-#map {
+.map-container {
 	width: 100%;
 	height: 100%;
 }
@@ -250,15 +269,7 @@ textarea:focus-visible {
 	box-shadow: 0 8px 18px rgba(22, 48, 43, 0.26);
 }
 
-.business-marker.food {
-	background: var(--cedar);
-}
-
-.business-marker.barber {
-	background: var(--ink);
-}
-
-.business-marker.education {
+.business-marker.pending {
 	background: var(--gold);
 	color: var(--ink);
 }
@@ -272,10 +283,6 @@ textarea:focus-visible {
 .popup h3 {
 	margin: 0;
 	font-size: 1rem;
-}
-
-.popup p {
-	line-height: 1.4;
 }
 
 .composer {
@@ -366,24 +373,6 @@ textarea {
 		border-right: 0;
 		border-top: 1px solid var(--line);
 		padding: 16px;
-	}
-
-	.brand-block {
-		grid-template-columns: 44px 1fr;
-	}
-
-	.brand-mark {
-		width: 44px;
-		height: 44px;
-	}
-
-	h1 {
-		font-size: 1.25rem;
-	}
-
-	.brand-block p {
-		max-width: none;
-		font-size: 0.86rem;
 	}
 
 	.composer {

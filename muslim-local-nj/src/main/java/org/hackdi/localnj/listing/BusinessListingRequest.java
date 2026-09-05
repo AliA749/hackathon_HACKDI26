@@ -13,6 +13,6 @@ public record BusinessListingRequest(
 		@NotNull BusinessCategory category,
 		@NotBlank @Size(max = 500) String comment,
 		@Size(max = 255) @Pattern(regexp = "^(https?://.+)?$", message = "Website must start with http:// or https://") String websiteUrl,
-		@NotNull @DecimalMin("38.70") @DecimalMax("41.40") Double latitude,
-		@NotNull @DecimalMin("-75.70") @DecimalMax("-73.80") Double longitude) {
+		@NotNull @DecimalMin(NjBounds.MIN_LAT) @DecimalMax(NjBounds.MAX_LAT) Double latitude,
+		@NotNull @DecimalMin(NjBounds.MIN_LNG) @DecimalMax(NjBounds.MAX_LNG) Double longitude) {
 }
