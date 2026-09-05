@@ -60,6 +60,11 @@ the backend on `:8080`.
 
 ## API
 
+`GET /api/geo/nj-boundary`
+
+Returns the New Jersey outline as GeoJSON. The frontend uses it both to draw
+the coverage area and to reject clicks outside the state.
+
 `GET /api/listings`
 
 Optional query params, all combinable: `minLat`, `maxLat`, `minLng`, `maxLng`

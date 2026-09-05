@@ -183,6 +183,13 @@ This box is a deliberate superset of NJ's real extremes (≈38.93-41.36 lat,
 is guaranteed to pass backend validation. Backend: `NjBounds.java`.
 Frontend: `frontend/src/constants/bounds.js`.
 
+**The box is not sufficient on its own.** New Jersey is not a rectangle, so
+this box also covers Philadelphia, Staten Island, part of Delaware and open
+ocean. Authoritative enforcement is a point-in-polygon test against the real
+state outline (`geo/new-jersey.geojson`, served at `GET /api/geo/nj-boundary`
+and validated by the `@InNewJersey` constraint). The box remains only as a
+fast-reject and for map viewport framing.
+
 ## 9. API Specification
 
 `GET /api/listings`
@@ -228,6 +235,15 @@ fixed in code, documented here so the team understands *why*, not just
    since React re-layouts (sidebar/modal state changes) can leave Leaflet's
    cached container size stale, which independently causes the same
    symptom.
+
+3. **A bounding box let non-NJ businesses in.** Posting at Philadelphia's
+   coordinates returned `201 Created`, because a rectangle drawn around New
+   Jersey necessarily includes Philadelphia, Staten Island, part of Delaware
+   and the Atlantic. Fix: the real state outline is now shipped as GeoJSON,
+   enforced server-side by a point-in-polygon constraint, served to the
+   frontend at `GET /api/geo/nj-boundary` so both sides share one polygon,
+   and drawn on the map so users can see where posting is allowed. Covered by
+   `NewJerseyBoundaryTest` (Camden inside, Philadelphia outside - ~5km apart).
 
 ## 11. Suggested 24-Hour Timeline
 

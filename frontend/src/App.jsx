@@ -4,6 +4,8 @@ import PinComposer from "./components/PinComposer.jsx";
 import SearchBar from "./components/SearchBar.jsx";
 import ListingSidebar from "./components/ListingSidebar.jsx";
 import { useListings } from "./hooks/useListings.js";
+import { fetchNjBoundary } from "./api/geo.js";
+import { containsPoint } from "./utils/geometry.js";
 import { NJ_BOUNDS } from "./constants/bounds.js";
 
 function toBoundsParams(bounds) {
@@ -16,10 +18,11 @@ function toBoundsParams(bounds) {
 }
 
 export default function App() {
-	const { listings, status, loadListings, addListing } = useListings();
+	const { listings, status, setStatus, loadListings, addListing } = useListings();
 	const [pendingPosition, setPendingPosition] = useState(null);
 	const [composerOpen, setComposerOpen] = useState(false);
 	const [activeFilter, setActiveFilter] = useState({});
+	const [boundary, setBoundary] = useState(null);
 	const mapRef = useRef(null);
 	const lastBoundsRef = useRef(null);
 
@@ -38,15 +41,30 @@ export default function App() {
 		loadListings({});
 	}, [loadListings]);
 
-	const handleMapClick = useCallback((latlng) => {
-		// Same bounds the backend validates against - a click here can never
-		// be rejected by the server for being outside New Jersey.
-		if (!NJ_BOUNDS.contains(latlng)) {
-			return;
-		}
-		setPendingPosition(latlng);
-		setComposerOpen(true);
+	useEffect(() => {
+		fetchNjBoundary().then(setBoundary).catch(() => setBoundary(null));
 	}, []);
+
+	const handleMapClick = useCallback(
+		(latlng) => {
+			// Test against the real state outline (same polygon the backend
+			// validates with). A bounding box would also accept Philadelphia,
+			// Staten Island and the Atlantic. Falls back to the box only while
+			// the boundary is still loading.
+			const insideNewJersey = boundary
+				? containsPoint(boundary, latlng.lat, latlng.lng)
+				: NJ_BOUNDS.contains(latlng);
+
+			if (!insideNewJersey) {
+				setStatus("That spot is outside New Jersey - listings are limited to NJ.");
+				return;
+			}
+
+			setPendingPosition(latlng);
+			setComposerOpen(true);
+		},
+		[boundary, setStatus]
+	);
 
 	const handleSearch = useCallback(
 		(filter) => {
@@ -108,6 +126,7 @@ export default function App() {
 			<main className="map-stage">
 				<MapView
 					listings={listings}
+					boundary={boundary}
 					pendingPin={pendingPosition}
 					onMapClick={handleMapClick}
 					onBoundsChange={handleBoundsChange}
