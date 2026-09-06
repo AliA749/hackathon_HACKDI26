@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { Circle, GeoJSON, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { NJ_BOUNDS, NJ_CENTER, NJ_VIEW_BOUNDS } from "../constants/bounds.js";
-import { categoryMeta } from "../constants/categories.js";
+import { isExperience, metaFor } from "../constants/categories.js";
 import { businessPin, pendingIcon, userLocationIcon } from "./markerIcons.js";
+import { avatarFor } from "../utils/media.js";
 import { initials, timeAgo } from "../utils/time.js";
 
 function MapEvents({ onMapClick, onBoundsChange }) {
@@ -212,7 +213,13 @@ function MapControls({ onStatus, onLocated }) {
 // Only legend entries for categories actually on screen, so the key never
 // advertises a pin colour the user cannot see.
 function MapLegend({ listings }) {
-	const present = [...new Set(listings.map((listing) => listing.category))].map(categoryMeta);
+	// Keyed by label, not category value: an experience rides on the OTHER
+	// category, so keying by value would collapse "Experience" and "Other"
+	// into a single legend entry.
+	const present = [...new Map(listings.map((listing) => {
+		const meta = metaFor(listing);
+		return [meta.label, meta];
+	})).values()];
 
 	if (present.length === 0) {
 		return null;
@@ -239,18 +246,30 @@ function MapLegend({ listings }) {
 }
 
 function ListingPopup({ listing }) {
-	const meta = categoryMeta(listing.category);
+	const meta = metaFor(listing);
 	const posted = timeAgo(listing.createdAt);
+	const experience = isExperience(listing);
+	const [imageFailed, setImageFailed] = useState(false);
 
 	return (
 		<div className="w-72 p-4 bg-surface-container-lowest">
 			<div className="flex items-start justify-between gap-2 pb-2.5 border-b border-surface-container-high/60">
 				<div className="flex items-center gap-2.5 min-w-0">
 					<span
-						className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[13px] flex-shrink-0"
+						className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[13px] flex-shrink-0 overflow-hidden"
 						style={{ background: meta.ink, color: meta.on }}
 					>
-						{initials(listing.ownerName)}
+						{imageFailed ? (
+							initials(listing.ownerName)
+						) : (
+							<img
+								className="w-full h-full object-cover"
+								src={avatarFor(listing, 96)}
+								alt=""
+								loading="lazy"
+								onError={() => setImageFailed(true)}
+							/>
+						)}
 					</span>
 					<div className="min-w-0">
 						<h4 className="font-label-lg text-label-lg text-on-surface font-bold truncate">
@@ -261,11 +280,19 @@ function ListingPopup({ listing }) {
 				</div>
 			</div>
 
+			{/* An experience has no business name, so the row carries only the
+			    kind tag - there is nothing to advertise. */}
 			<div className="mt-2.5 px-2.5 py-1 rounded-lg bg-surface-container-low flex items-center justify-between gap-2">
-				<span className="font-label-md text-label-md font-semibold text-primary truncate flex items-center gap-1">
-					<span className="material-symbols-outlined text-[14px]" aria-hidden="true">store</span>
-					{listing.businessName}
-				</span>
+				{experience ? (
+					<span className="font-label-md text-label-md text-on-surface-variant truncate">
+						What this area is like
+					</span>
+				) : (
+					<span className="font-label-md text-label-md font-semibold text-primary truncate flex items-center gap-1">
+						<span className="material-symbols-outlined text-[14px]" aria-hidden="true">store</span>
+						{listing.businessName}
+					</span>
+				)}
 				<span
 					className="font-label-tag text-label-tag px-2 py-0.5 rounded-full flex-shrink-0"
 					style={{ background: meta.ink, color: meta.on }}
@@ -276,7 +303,7 @@ function ListingPopup({ listing }) {
 
 			<p className="font-body-sm text-body-sm text-on-surface mt-2.5 leading-relaxed">{listing.comment}</p>
 
-			{listing.websiteUrl && (
+			{!experience && listing.websiteUrl && (
 				<a
 					className="mt-3 inline-flex items-center gap-1 font-label-md text-label-md text-primary hover:underline break-all"
 					href={listing.websiteUrl}

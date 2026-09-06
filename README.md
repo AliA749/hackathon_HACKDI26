@@ -125,6 +125,46 @@ no ownership check - anyone can delete anyone's pin, the same tradeoff the
 anonymous `POST` already makes. The UI puts this behind a two-step confirm,
 but that is a speed bump, not access control.
 
+## Two Kinds of Pin
+
+A pin is either a **business** (`kind=SERVICE`) or an **experience**
+(`kind=EXPERIENCE`). Clicking the map asks which before showing a form.
+
+| | Business | Experience |
+| --- | --- | --- |
+| Business name | required | **not asked, and rejected if sent** |
+| Website | optional | **not asked, and rejected if sent** |
+| Categories | 8 trades (Food, Barber, …) | none - "experience" is the category |
+| Map pin | category glyph (fork, scissors…) | **text logo** reading "Experience" |
+| Image | category-appropriate stock photo | generated avatar |
+
+`kind` and `category` are **orthogonal columns**, and there is deliberately no
+`EXPERIENCE` member in `BusinessCategory`. Hibernate emits a CHECK constraint
+listing that enum's values, and `ddl-auto=update` will not widen it on a
+database that already has rows - adding a member breaks every existing
+checkout with `Value not permitted for column`. An experience stores
+`category=OTHER` plus `kind=EXPERIENCE`. For the same reason `businessName` is
+stored as `""` rather than `NULL` on experiences: the column was created
+`NOT NULL` and `update` will not relax that either.
+
+Rejecting a business name or link on an experience is enforced server-side by
+`@ValidPost`, not just hidden in the UI - otherwise a hand-rolled POST could
+park an advert in the community feed wearing an experience's clothes.
+
+### Imagery
+
+Nothing in `frontend/src/utils/media.js` is a real photograph of a real
+business. There is no photo field and none of the imported OSM records carry
+an `image` tag, so business cards show a **category-appropriate stock photo**
+(loremflickr, deterministic per listing) behind a small `STOCK` badge that
+says so. Experiences get generated DiceBear avatars - illustrations rather
+than a stranger's face attached to someone else's words. Both fall back to the
+category glyph offline.
+
+> The `STOCK` badge is load-bearing. "King of Gyro" is a real restaurant, and
+> an unlabelled stock photo of someone else's kitchen misrepresents them.
+> Delete this whole module the moment there is a real `photoUrl`.
+
 ## Seeding Real Data
 
 ```powershell

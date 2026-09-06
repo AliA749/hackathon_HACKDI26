@@ -17,6 +17,7 @@ public interface BusinessListingRepository extends JpaRepository<BusinessListing
 			WHERE (:minLat IS NULL OR l.latitude BETWEEN :minLat AND :maxLat)
 			  AND (:minLng IS NULL OR l.longitude BETWEEN :minLng AND :maxLng)
 			  AND (:category IS NULL OR l.category = :category)
+			  AND (:kind IS NULL OR l.kind = :kind)
 			  AND (:query IS NULL
 			       OR LOWER(l.businessName) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))
 			       OR LOWER(l.comment) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')))
@@ -28,5 +29,8 @@ public interface BusinessListingRepository extends JpaRepository<BusinessListing
 			@Param("minLng") Double minLng,
 			@Param("maxLng") Double maxLng,
 			@Param("category") BusinessCategory category,
+			@Param("kind") PostKind kind,
 			@Param("query") String query);
+
+	List<BusinessListing> findByKindIsNull();
 }

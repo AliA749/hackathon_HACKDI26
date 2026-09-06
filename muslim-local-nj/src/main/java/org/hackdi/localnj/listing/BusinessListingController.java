@@ -30,8 +30,9 @@ public class BusinessListingController {
 	 *   <li>minLat/maxLat/minLng/maxLng -&gt; pins inside the current map bounds</li>
 	 *   <li>q -&gt; keyword search against business name and description</li>
 	 *   <li>category -&gt; filter by category</li>
+	 *   <li>kind -&gt; SERVICE (businesses) or EXPERIENCE (what a place is like)</li>
 	 * </ul>
-	 * Bounds and search/category can be combined, e.g. "search this area".
+	 * Bounds and search/category/kind can be combined, e.g. "search this area".
 	 */
 	@GetMapping
 	public List<BusinessListingResponse> list(
@@ -40,22 +41,34 @@ public class BusinessListingController {
 			@RequestParam(required = false) Double minLng,
 			@RequestParam(required = false) Double maxLng,
 			@RequestParam(required = false) BusinessCategory category,
+			@RequestParam(required = false) PostKind kind,
 			@RequestParam(required = false) String q) {
 		String query = (q == null || q.isBlank()) ? null : q.trim();
-		List<BusinessListing> listings = repository.search(minLat, maxLat, minLng, maxLng, category, query);
+		List<BusinessListing> listings = repository.search(minLat, maxLat, minLng, maxLng, category, kind, query);
 		return listings.stream().map(this::toResponse).toList();
 	}
 
 	@PostMapping
 	public ResponseEntity<BusinessListingResponse> create(@Valid @RequestBody BusinessListingRequest request) {
+		PostKind kind = request.kindOrDefault();
+		// Empty string, not null. business_name was created NOT NULL back when
+		// every post was a business, and ddl-auto=update will not relax an
+		// existing column's nullability - so a null here fails on every database
+		// that already has rows, including every teammate's. `kind` is the real
+		// discriminator, which is exactly why it exists; the emptiness of these
+		// two fields is a consequence, not the source of truth.
+		String businessName = kind == PostKind.EXPERIENCE ? "" : request.businessName().trim();
+		String websiteUrl = kind == PostKind.EXPERIENCE ? "" : normalizeWebsite(request.websiteUrl());
+
 		BusinessListing saved = repository.save(new BusinessListing(
 				request.ownerName().trim(),
-				request.businessName().trim(),
+				businessName,
 				request.category(),
 				request.comment().trim(),
-				normalizeWebsite(request.websiteUrl()),
+				websiteUrl,
 				request.latitude(),
-				request.longitude()));
+				request.longitude(),
+				kind));
 		return ResponseEntity
 			.created(URI.create("/api/listings/" + saved.getId()))
 			.body(toResponse(saved));
@@ -89,6 +102,7 @@ public class BusinessListingController {
 				listing.getOwnerName(),
 				listing.getBusinessName(),
 				listing.getCategory(),
+				listing.getKind(),
 				listing.getComment(),
 				listing.getWebsiteUrl(),
 				listing.getLatitude(),

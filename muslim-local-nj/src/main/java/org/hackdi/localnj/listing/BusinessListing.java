@@ -26,13 +26,18 @@ public class BusinessListing {
 	@Size(max = 80)
 	private String ownerName;
 
-	@NotBlank
+	// Nullable on purpose: an EXPERIENCE post has no business name. The
+	// SERVICE-vs-EXPERIENCE rules are enforced by @ValidPost on the request,
+	// which can see the post kind - a field annotation here cannot.
 	@Size(max = 100)
 	private String businessName;
 
 	@NotNull
 	@Enumerated(EnumType.STRING)
 	private BusinessCategory category;
+
+	@Enumerated(EnumType.STRING)
+	private PostKind kind;
 
 	@NotBlank
 	@Size(max = 500)
@@ -59,6 +64,11 @@ public class BusinessListing {
 
 	public BusinessListing(String ownerName, String businessName, BusinessCategory category, String comment,
 			String websiteUrl, Double latitude, Double longitude) {
+		this(ownerName, businessName, category, comment, websiteUrl, latitude, longitude, PostKind.SERVICE);
+	}
+
+	public BusinessListing(String ownerName, String businessName, BusinessCategory category, String comment,
+			String websiteUrl, Double latitude, Double longitude, PostKind kind) {
 		this.ownerName = ownerName;
 		this.businessName = businessName;
 		this.category = category;
@@ -66,6 +76,7 @@ public class BusinessListing {
 		this.websiteUrl = websiteUrl;
 		this.latitude = latitude;
 		this.longitude = longitude;
+		this.kind = kind;
 	}
 
 	@PrePersist
@@ -87,6 +98,19 @@ public class BusinessListing {
 
 	public BusinessCategory getCategory() {
 		return category;
+	}
+
+	/**
+	 * Rows written before this column existed have it null. They were all
+	 * businesses, so null reads as SERVICE rather than leaking a missing field
+	 * out of the API. {@code PostKindBackfill} rewrites them on startup.
+	 */
+	public PostKind getKind() {
+		return kind == null ? PostKind.SERVICE : kind;
+	}
+
+	void setKind(PostKind kind) {
+		this.kind = kind;
 	}
 
 	public String getComment() {

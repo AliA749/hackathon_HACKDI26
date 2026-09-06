@@ -3,7 +3,7 @@
 // frontend and backend are deployed to different origins.
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
-export async function fetchListings({ bounds, query, category } = {}) {
+export async function fetchListings({ bounds, query, category, kind } = {}) {
 	const params = new URLSearchParams();
 	if (bounds) {
 		params.set("minLat", bounds.minLat);
@@ -16,6 +16,9 @@ export async function fetchListings({ bounds, query, category } = {}) {
 	}
 	if (category) {
 		params.set("category", category);
+	}
+	if (kind) {
+		params.set("kind", kind);
 	}
 
 	const response = await fetch(`${API_BASE}/api/listings?${params}`);
