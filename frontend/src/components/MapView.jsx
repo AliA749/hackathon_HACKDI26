@@ -322,7 +322,14 @@ export default function MapView({ listings, boundary, pendingPin, onMapClick, on
 				url="https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png"
 				maxZoom={20}
 				keepBuffer={6}
-				attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+				/*
+				  The OpenStreetMap credit covers two separate things now: the
+				  basemap tiles, and the imported business listings themselves
+				  (see tools/import-osm.mjs). ODbL requires attribution for the
+				  data, not just the imagery, so this line is a licence
+				  obligation - don't trim it.
+				*/
+				attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (tiles &amp; imported listings, ODbL)'
 			/>
 			<MapEvents onMapClick={onMapClick} onBoundsChange={onBoundsChange} />
 			<InvalidateOnResize />

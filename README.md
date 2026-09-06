@@ -125,6 +125,58 @@ no ownership check - anyone can delete anyone's pin, the same tradeoff the
 anonymous `POST` already makes. The UI puts this behind a two-step confirm,
 but that is a speed bump, not access control.
 
+## Seeding Real Data
+
+```powershell
+node tools/import-osm.mjs --dry-run   # preview
+node tools/import-osm.mjs             # import
+node tools/import-osm.mjs --purge     # undo (only rows this tool created)
+```
+
+Pulls halal-tagged New Jersey businesses from OpenStreetMap via the Overpass
+API. Currently yields **29 local businesses** - King of Gyro, The Halal Zone,
+Haraz Coffee House, Union Super Store and Halal Meat, Madina Fountain BBQ, and
+so on. Safe to re-run: a row already present under the same name within 250 m
+is skipped.
+
+**Why OpenStreetMap and not the big halal directories.** OSM is published under
+the Open Database Licence, which permits reuse in a product like this one as
+long as the source is credited - which is why imported rows carry
+"OpenStreetMap contributors" as the owner name and why the map's attribution
+line mentions imported listings, not just tiles. The commercial directories do
+not permit it:
+
+| Source | Status |
+| --- | --- |
+| OpenStreetMap | **Usable.** ODbL, attribution required. |
+| halalfood.com | Terms of Use §10: *"You may not scrape, copy, or redistribute platform content without written permission."* |
+| zabihah.com | ToS prohibits *"automated data collection"*; `robots.txt` sets `Disallow: /api/` for all agents. |
+| halalnj.net | Did not respond (no HTTP response at time of writing). |
+| UECNJ, ISCJ | No API. Community organisations - **ask them.** Most likely to say yes, and their data is the highest quality of any source here. |
+
+Getting written permission from UECNJ/ISCJ, or a data partnership with
+Zabihah, is the correct route to the "hundreds of listings" number. It is a
+conversation, not a scraper.
+
+**Two data-quality rules the importer enforces**, both learned from what the
+first run produced:
+
+- **`diet:halal=yes` means "halal options available", not "this place is
+  halal".** Only `diet:halal=only` means the whole menu is. 55 of 56 rows are
+  `yes`, so descriptions say "with halal options" and name the tag. Halal
+  status is a religious obligation - overstating it makes someone break their
+  diet on our word.
+- **National chains are excluded.** The unfiltered import was 26/56 chains -
+  13 Wawas, 5 ShopRites, 3 McDonald's (that last one is near-certainly a
+  mis-tag). A gas-station convenience store with one halal item is not a
+  Muslim-owned or Muslim-serving local business, and thirteen identical Wawa
+  cards bury the businesses this app exists to surface.
+
+> `nj_muslim_businesses_api.json` in the repo root is **not** a verified
+> dataset. Its `verification_source` fields cite bodies like the "Passaic
+> County Muslim Business Network" that do not appear to exist. Don't import it
+> or cite it in the demo without checking each row by hand.
+
 ## Notable Decisions
 
 - **No login/signup.** Posting is anonymous-by-name (`ownerName` is free
