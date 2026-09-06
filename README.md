@@ -6,6 +6,10 @@ their own pin with a short listing - no account required.
 
 See [`PRD.md`](PRD.md) for the full product requirements document.
 
+**For judging:** [`JUDGE_QA.md`](JUDGE_QA.md) is the anticipated-questions prep
+sheet, and [`PROJECT_REPORT.md`](PROJECT_REPORT.md) is the full build report -
+architecture, tools, timeline, decisions, metrics, and known gaps.
+
 ## Architecture
 
 ```text

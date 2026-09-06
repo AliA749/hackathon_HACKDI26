@@ -7,7 +7,8 @@
       "Bash(wsl.exe *)",
       "PowerShell(gh *)",
       "PowerShell(git fetch *)",
-      "PowerShell(git *)"
+      "PowerShell(git *)",
+      "PowerShell(gh pr view 3 --repo AliA749/hackathon_HACKDI26 --json number,state,isDraft,baseRefName,headRefName,commits | ConvertFrom-Json | Select-Object number,state,isDraft,baseRefName,headRefName,@{n='commits';e={$_.commits.Count}} | Format-List)"
     ]
   }
 }
