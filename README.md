@@ -24,28 +24,57 @@ muslim-local-nj/         Spring Boot backend (port 8080)
 
 ## Local Run
 
-**1. Start Postgres:**
+```powershell
+.\start-dev.ps1
+```
+
+That's the whole thing. It builds the backend jar if `src/main` changed,
+installs frontend deps if missing, starts both servers, waits for them to
+answer, and opens a browser tab. Stop it with `.\stop-dev.ps1`.
+
+Measured on a Windows 11 laptop: **~7 s** when the jar is current, **~10 s**
+when it has to rebuild. Roughly 6 s of that is Spring Boot's own startup; Vite
+is ready in ~215 ms.
+
+Requirements are Java 21+ and Node 18+. **No Docker, no Postgres, no env
+vars** - the backend defaults to a file-backed H2 database in
+`muslim-local-nj/data/`.
+
+Useful flags:
+
+```powershell
+.\start-dev.ps1 -Db ./data/vertwo   # use your own scratch database
+.\start-dev.ps1 -Rebuild            # force a clean backend rebuild
+.\start-dev.ps1 -NoBrowser          # don't open a tab
+```
+
+<details>
+<summary>Running the pieces by hand, or against Postgres</summary>
+
+```powershell
+cd muslim-local-nj
+.\mvnw.cmd spring-boot:run           # backend on :8080, H2
+
+cd frontend
+npm install
+npm run dev                          # frontend on :5173
+```
+
+For Postgres instead of H2 (a shared team database, or a production-like
+deploy), start the container and activate the `postgres` profile:
 
 ```powershell
 cd muslim-local-nj
 docker compose up -d
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=postgres"
 ```
 
-**2. Start the backend** (talks to Postgres on localhost:5432, see
-`application.properties` for overridable env vars):
+If you run the Vite dev server inside WSL against this project on `/mnt/c`,
+set `VITE_USE_POLLING=1` - Windows-side edits emit no inotify events WSL can
+see, so without it the watcher misses every change. Leave it unset when
+running natively on Windows; polling costs real CPU on every HMR round-trip.
 
-```powershell
-cd muslim-local-nj
-.\mvnw.cmd spring-boot:run
-```
-
-**3. Start the frontend:**
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
+</details>
 
 Open `http://localhost:5173`. The Vite dev server proxies `/api/*` calls to
 the backend on `:8080`.
@@ -89,12 +118,27 @@ returns everything, newest first.
 A validation failure (e.g. coordinates outside New Jersey) returns `400` with
 a field-level `errors` map instead of a generic error page.
 
+`DELETE /api/listings/{id}`
+
+Removes a listing. `204` on success, `404` if that id never existed. There is
+no ownership check - anyone can delete anyone's pin, the same tradeoff the
+anonymous `POST` already makes. The UI puts this behind a two-step confirm,
+but that is a speed bump, not access control.
+
 ## Notable Decisions
 
 - **No login/signup.** Posting is anonymous-by-name (`ownerName` is free
   text). This trades away moderation/spam control for zero auth-flow build
   time - see `PRD.md` for the tradeoff and the moderation follow-ups it
-  implies.
+  implies. Now that `DELETE` exists, the same gap means any visitor can remove
+  any listing, which raises the priority of the auth follow-up.
+- **H2 is the default database, Postgres is opt-in.** H2 is a `runtime`
+  dependency, not `test`, specifically so a clean checkout starts with one
+  command. When H2 was test-scoped and `application.properties` hardcoded a
+  Postgres URL, a machine without Docker could not start the app at all - the
+  failure surfaced as `Unable to determine Dialect without JDBC metadata`,
+  which reads like a Hibernate misconfiguration rather than "nothing is
+  listening on 5432".
 - **New Jersey bounds live in exactly two places** and must stay identical:
   `muslim-local-nj/.../listing/NjBounds.java` (backend validation) and
   `frontend/src/constants/bounds.js` (map click-eligible area). A previous

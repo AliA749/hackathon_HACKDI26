@@ -4,7 +4,9 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,6 +59,28 @@ public class BusinessListingController {
 		return ResponseEntity
 			.created(URI.create("/api/listings/" + saved.getId()))
 			.body(toResponse(saved));
+	}
+
+	/**
+	 * Removes a listing.
+	 *
+	 * <p>Returns 204 when the row is gone and 404 when it never existed, rather
+	 * than 204 for both. The frontend shows a "removed" confirmation on 204, so
+	 * collapsing the two would report success for a stale id the user clicked
+	 * twice.
+	 *
+	 * <p>There is no ownership check, because there are no accounts - anyone can
+	 * delete anyone's pin. That is the same tradeoff the anonymous POST already
+	 * makes, and it is the single biggest reason this API needs auth plus a
+	 * moderation trail before it is exposed beyond a demo.
+	 */
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Void> delete(@PathVariable Long id) {
+		if (!repository.existsById(id)) {
+			return ResponseEntity.notFound().build();
+		}
+		repository.deleteById(id);
+		return ResponseEntity.noContent().build();
 	}
 
 	private BusinessListingResponse toResponse(BusinessListing listing) {

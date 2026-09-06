@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { createListing, fetchListings } from "../api/listings.js";
+import { createListing, deleteListing, fetchListings } from "../api/listings.js";
 
 export function useListings() {
 	const [listings, setListings] = useState([]);
@@ -29,5 +29,23 @@ export function useListings() {
 		return created;
 	}, []);
 
-	return { listings, status, setStatus, loadListings, addListing };
+	// Optimistic: the card disappears on click, and comes back if the server
+	// rejects the delete. Waiting for the round-trip instead would leave the
+	// card sitting there looking like the button did nothing.
+	const removeListing = useCallback(async (listing) => {
+		const snapshot = listings;
+		setListings((current) => current.filter((item) => item.id !== listing.id));
+
+		try {
+			await deleteListing(listing.id);
+			setStatus(`${listing.businessName} was removed.`);
+		}
+		catch (error) {
+			setListings(snapshot);
+			setStatus(error.message);
+			throw error;
+		}
+	}, [listings]);
+
+	return { listings, status, setStatus, loadListings, addListing, removeListing };
 }

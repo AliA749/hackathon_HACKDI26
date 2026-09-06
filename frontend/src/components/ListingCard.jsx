@@ -1,9 +1,37 @@
+import { useState } from "react";
 import { categoryMeta } from "../constants/categories.js";
 import { initials, timeAgo } from "../utils/time.js";
 
-export default function ListingCard({ listing, active, onSelect }) {
+export default function ListingCard({ listing, active, onSelect, onDelete }) {
 	const meta = categoryMeta(listing.category);
 	const posted = timeAgo(listing.createdAt);
+
+	// Two-step confirm rather than window.confirm(): the delete is permanent,
+	// there is no undo and no ownership check, so a single stray click on a
+	// touch screen should not be able to destroy someone's listing. Kept inline
+	// so it matches the rest of the UI instead of a native browser dialog.
+	const [confirming, setConfirming] = useState(false);
+	const [deleting, setDeleting] = useState(false);
+
+	// Every control inside the card has to stop propagation: the <article>
+	// itself is the "fly to this pin" click target.
+	const swallow = (event) => {
+		event.stopPropagation();
+	};
+
+	const handleDelete = async (event) => {
+		swallow(event);
+		setDeleting(true);
+		try {
+			await onDelete(listing);
+		}
+		catch {
+			// useListings restores the card and puts the reason in the status
+			// line; just re-arm the button here.
+			setDeleting(false);
+			setConfirming(false);
+		}
+	};
 
 	return (
 		<article
@@ -34,9 +62,25 @@ export default function ListingCard({ listing, active, onSelect }) {
 							>
 								{meta.label}
 							</span>
-							{posted && (
-								<span className="text-[11px] text-outline whitespace-nowrap">{posted}</span>
-							)}
+							<span className="flex items-center gap-1 flex-shrink-0">
+								{posted && (
+									<span className="text-[11px] text-outline whitespace-nowrap">{posted}</span>
+								)}
+								{!confirming && (
+									<button
+										className="w-6 h-6 rounded-full flex items-center justify-center text-outline opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-error-container hover:text-on-error-container transition-all"
+										type="button"
+										title={`Delete ${listing.businessName}`}
+										aria-label={`Delete ${listing.businessName}`}
+										onClick={(event) => {
+											swallow(event);
+											setConfirming(true);
+										}}
+									>
+										<span className="material-symbols-outlined text-[15px]" aria-hidden="true">delete</span>
+									</button>
+								)}
+							</span>
 						</div>
 
 						<h3 className="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors truncate">
@@ -73,6 +117,34 @@ export default function ListingCard({ listing, active, onSelect }) {
 					</div>
 				</div>
 			</div>
+
+			{confirming && (
+				<div className="mt-3 pt-3 border-t border-error/20 flex items-center gap-2">
+					<p className="flex-1 min-w-0 font-body-sm text-body-sm text-on-surface-variant">
+						Delete this listing? This cannot be undone.
+					</p>
+					<button
+						className="h-8 px-3 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors flex-shrink-0 disabled:opacity-50"
+						type="button"
+						disabled={deleting}
+						onClick={(event) => {
+							swallow(event);
+							setConfirming(false);
+						}}
+					>
+						Cancel
+					</button>
+					<button
+						className="h-8 px-3 rounded-lg bg-error text-on-error font-label-md text-label-md font-semibold hover:brightness-110 transition-all flex-shrink-0 disabled:opacity-50 flex items-center gap-1"
+						type="button"
+						disabled={deleting}
+						onClick={handleDelete}
+					>
+						<span className="material-symbols-outlined text-[15px]" aria-hidden="true">delete</span>
+						{deleting ? "Deleting..." : "Delete"}
+					</button>
+				</div>
+			)}
 		</article>
 	);
 }

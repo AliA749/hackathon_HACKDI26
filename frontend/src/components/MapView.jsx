@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import { GeoJSON, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { Circle, GeoJSON, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { NJ_BOUNDS, NJ_CENTER, NJ_VIEW_BOUNDS } from "../constants/bounds.js";
 import { categoryMeta } from "../constants/categories.js";
-import { businessPin, pendingIcon } from "./markerIcons.js";
+import { businessPin, pendingIcon, userLocationIcon } from "./markerIcons.js";
 import { initials, timeAgo } from "../utils/time.js";
 
 function MapEvents({ onMapClick, onBoundsChange }) {
@@ -81,18 +81,109 @@ function MapOverlay({ className, children }) {
 	);
 }
 
-function MapControls() {
+/*
+ * Turns a GeolocationPositionError into something a user can act on. The
+ * browser's own .message is either empty or a generic "User denied
+ * Geolocation", which does not tell anyone what to do next - and on Windows the
+ * overwhelmingly common cause is the OS-level location toggle, not the site
+ * permission, so that case gets called out by name.
+ */
+function locationErrorMessage(error) {
+	switch (error?.code) {
+		case 1: // PERMISSION_DENIED
+			return "Location permission was blocked. Click the icon at the left of the address bar, set Location to Allow, then try again.";
+		case 2: // POSITION_UNAVAILABLE
+			return "Your device could not provide a location. On Windows, check Settings > Privacy & security > Location is on for desktop apps.";
+		case 3: // TIMEOUT
+			return "Timed out finding your location. Try again - the first fix can be slow without Wi-Fi or GPS.";
+		default:
+			return "Could not find your location.";
+	}
+}
+
+function MapControls({ onStatus, onLocated }) {
 	const map = useMap();
+	const [locating, setLocating] = useState(false);
+
+	const locate = useCallback(() => {
+		// Geolocation is gated on a secure context. localhost counts as secure,
+		// but the moment someone opens the Vite "Network" URL (http://192.168.x.x)
+		// to demo on a phone, navigator.geolocation is simply undefined - which
+		// looks like a dead button unless we say so.
+		if (!navigator.geolocation) {
+			onStatus(
+				window.isSecureContext
+					? "This browser does not support location lookup."
+					: "Location needs a secure page. Use http://localhost:5173 rather than the network address."
+			);
+			return;
+		}
+
+		setLocating(true);
+		onStatus("Finding your location...");
+
+		navigator.geolocation.getCurrentPosition(
+			(position) => {
+				setLocating(false);
+				const { latitude, longitude, accuracy } = position.coords;
+				const latlng = L.latLng(latitude, longitude);
+
+				onLocated({ latlng, accuracy });
+
+				// Deliberately do NOT move the map when the user is outside New
+				// Jersey. Flying to Ohio would show an empty map outside the
+				// coverage area and silently drop this warning: moving fires
+				// moveend, which kicks off the listings fetch, and that fetch
+				// resolves after any status we set here - so the result count
+				// always wins the race for the status line. Staying put means
+				// there is no moveend and the message survives.
+				if (!NJ_BOUNDS.contains(latlng)) {
+					onStatus("You're outside New Jersey - this map only covers NJ businesses.");
+					return;
+				}
+
+				// Inside NJ the map does move, and the resulting "N businesses
+				// found." is a better status line than anything we'd write here.
+				map.flyTo(latlng, Math.max(map.getZoom(), 13));
+			},
+			(error) => {
+				setLocating(false);
+				onLocated(null);
+				onStatus(locationErrorMessage(error));
+			},
+			// High accuracy because "which town am I in" is the whole point.
+			// 12s is long enough for a cold GPS/Wi-Fi fix; the 60s cache makes a
+			// second click instant.
+			{ enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+		);
+	}, [map, onLocated, onStatus]);
 
 	return (
 		<MapOverlay className="absolute right-4 top-4 z-[1000] flex flex-col items-center gap-2">
 			<button
+				className="w-10 h-10 rounded-xl bg-surface-container-lowest/95 backdrop-blur-md text-on-surface hover:text-primary flex items-center justify-center shadow-[0_4px_14px_rgba(13,92,70,0.1)] transition-transform active:scale-90 disabled:opacity-70"
+				type="button"
+				title="Find my location"
+				aria-label="Find my location"
+				disabled={locating}
+				onClick={locate}
+			>
+				<span
+					className={`material-symbols-outlined text-[20px] ${locating ? "animate-spin text-primary" : ""}`}
+					aria-hidden="true"
+				>
+					{locating ? "progress_activity" : "my_location"}
+				</span>
+			</button>
+
+			<button
 				className="w-10 h-10 rounded-xl bg-surface-container-lowest/95 backdrop-blur-md text-on-surface hover:text-primary flex items-center justify-center shadow-[0_4px_14px_rgba(13,92,70,0.1)] transition-transform active:scale-90"
 				type="button"
 				title="Show all of New Jersey"
+				aria-label="Show all of New Jersey"
 				onClick={() => map.fitBounds(NJ_BOUNDS)}
 			>
-				<span className="material-symbols-outlined text-[20px]" aria-hidden="true">my_location</span>
+				<span className="material-symbols-outlined text-[20px]" aria-hidden="true">fit_screen</span>
 			</button>
 
 			<div className="flex flex-col bg-surface-container-lowest/95 backdrop-blur-md rounded-xl shadow-[0_4px_14px_rgba(13,92,70,0.1)] overflow-hidden">
@@ -200,7 +291,9 @@ function ListingPopup({ listing }) {
 	);
 }
 
-export default function MapView({ listings, boundary, pendingPin, onMapClick, onBoundsChange, mapRef }) {
+export default function MapView({ listings, boundary, pendingPin, onMapClick, onBoundsChange, onStatus, mapRef }) {
+	const [userPosition, setUserPosition] = useState(null);
+
 	return (
 		<MapContainer
 			center={NJ_CENTER}
@@ -233,7 +326,7 @@ export default function MapView({ listings, boundary, pendingPin, onMapClick, on
 			/>
 			<MapEvents onMapClick={onMapClick} onBoundsChange={onBoundsChange} />
 			<InvalidateOnResize />
-			<MapControls />
+			<MapControls onStatus={onStatus} onLocated={setUserPosition} />
 			<MapLegend listings={listings} />
 
 			{/* Shows users exactly where they're allowed to drop a pin. */}
@@ -256,6 +349,33 @@ export default function MapView({ listings, boundary, pendingPin, onMapClick, on
 					</Popup>
 				</Marker>
 			))}
+
+			{/*
+			  The accuracy circle is the honest part of the answer: a Wi-Fi fix
+			  can be a kilometre wide, and a bare dot would claim precision the
+			  reading does not have. interactive={false} keeps it from eating
+			  clicks meant for the map underneath.
+			*/}
+			{userPosition && (
+				<>
+					<Circle
+						center={userPosition.latlng}
+						radius={userPosition.accuracy}
+						interactive={false}
+						pathOptions={{ color: "#1a73e8", weight: 1, fillColor: "#1a73e8", fillOpacity: 0.12 }}
+					/>
+					<Marker position={userPosition.latlng} icon={userLocationIcon()}>
+						<Popup>
+							<div className="px-1 py-0.5 font-body-sm text-body-sm text-on-surface">
+								You are here
+								<span className="block text-[11px] text-outline">
+									accurate to about {Math.round(userPosition.accuracy)} m
+								</span>
+							</div>
+						</Popup>
+					</Marker>
+				</>
+			)}
 
 			{pendingPin && <Marker position={pendingPin} icon={pendingIcon()} />}
 		</MapContainer>

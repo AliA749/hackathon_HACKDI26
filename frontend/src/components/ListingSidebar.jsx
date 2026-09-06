@@ -2,7 +2,7 @@ import ListingCard from "./ListingCard.jsx";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export default function ListingSidebar({ listings, status, activeId, onSelect }) {
+export default function ListingSidebar({ listings, status, activeId, onSelect, onDelete }) {
 	// The mock hardcodes "3 community check-ins in the last 15m". This counts
 	// the real listings instead, so the number always tells the truth.
 	const recent = listings.filter((listing) => {
@@ -60,6 +60,7 @@ export default function ListingSidebar({ listings, status, activeId, onSelect })
 							listing={listing}
 							active={listing.id === activeId}
 							onSelect={onSelect}
+							onDelete={onDelete}
 						/>
 					))
 				)}

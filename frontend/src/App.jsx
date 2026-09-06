@@ -18,7 +18,7 @@ function toBoundsParams(bounds) {
 }
 
 export default function App() {
-	const { listings, status, setStatus, loadListings, addListing } = useListings();
+	const { listings, status, setStatus, loadListings, addListing, removeListing } = useListings();
 	const [pendingPosition, setPendingPosition] = useState(null);
 	const [composerOpen, setComposerOpen] = useState(false);
 	const [category, setCategory] = useState(undefined);
@@ -127,6 +127,17 @@ export default function App() {
 		}
 	}, []);
 
+	const handleDeleteListing = useCallback(
+		async (listing) => {
+			await removeListing(listing);
+			// Clearing this matters: a stale activeId would keep re-applying the
+			// "selected" ring to whichever listing later reuses that id.
+			setActiveId((current) => (current === listing.id ? null : current));
+			setToast((current) => (current?.id === listing.id ? null : current));
+		},
+		[removeListing]
+	);
+
 	const closeComposer = useCallback(() => {
 		setComposerOpen(false);
 		setPendingPosition(null);
@@ -153,6 +164,7 @@ export default function App() {
 					status={status}
 					activeId={activeId}
 					onSelect={handleSelectListing}
+					onDelete={handleDeleteListing}
 				/>
 
 				<main className="flex-1 min-w-0 h-full relative">
@@ -162,6 +174,7 @@ export default function App() {
 						pendingPin={pendingPosition}
 						onMapClick={handleMapClick}
 						onBoundsChange={handleBoundsChange}
+						onStatus={setStatus}
 						mapRef={mapRef}
 					/>
 				</main>

@@ -64,6 +64,24 @@ export function businessPin(listing) {
 	});
 }
 
+// The blue "you are here" dot, deliberately a different shape and colour from
+// every business pin so it never reads as a listing.
+export function userLocationIcon() {
+	return L.divIcon({
+		className: "pin-marker-icon",
+		html: `
+			<div class="relative flex items-center justify-center select-none">
+				<div class="absolute w-8 h-8 rounded-full bg-[#1a73e8]/25 animate-ping pointer-events-none"></div>
+				<div class="relative w-4 h-4 rounded-full bg-[#1a73e8]"
+					style="box-shadow: 0 0 0 3px #ffffff, 0 2px 8px rgba(0,0,0,0.3);"></div>
+			</div>
+		`,
+		iconSize: [32, 32],
+		iconAnchor: [16, 16],
+		popupAnchor: [0, -16]
+	});
+}
+
 export function pendingIcon() {
 	return L.divIcon({
 		className: "pin-marker-icon",

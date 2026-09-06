@@ -40,3 +40,16 @@ export async function createListing(payload) {
 
 	return response.json();
 }
+
+export async function deleteListing(id) {
+	const response = await fetch(`${API_BASE}/api/listings/${id}`, { method: "DELETE" });
+
+	// 404 means someone else already deleted it. The user's intent - "this
+	// should not be on the map" - is satisfied either way, so treat it as
+	// success and let the caller drop it from the list.
+	if (response.ok || response.status === 404) {
+		return;
+	}
+
+	throw new Error("Could not remove this business. Please try again.");
+}
