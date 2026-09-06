@@ -140,7 +140,7 @@ A pin is either a **business** (`kind=SERVICE`) or an **experience**
 | Website | optional | **not asked, and rejected if sent** |
 | Categories | 8 trades (Food, Barber, …) | none - "experience" is the category |
 | Map pin | category glyph (fork, scissors…) | **text logo** reading "Experience" |
-| Image | category-appropriate stock photo | generated avatar |
+| Image | none - category glyph tile | generated avatar |
 
 `kind` and `category` are **orthogonal columns**, and there is deliberately no
 `EXPERIENCE` member in `BusinessCategory`. Hibernate emits a CHECK constraint
@@ -159,15 +159,19 @@ park an advert in the community feed wearing an experience's clothes.
 
 Nothing in `frontend/src/utils/media.js` is a real photograph of a real
 business. There is no photo field and none of the imported OSM records carry
-an `image` tag, so business cards show a **category-appropriate stock photo**
-(loremflickr, deterministic per listing) behind a small `STOCK` badge that
-says so. Experiences get generated DiceBear avatars - illustrations rather
-than a stranger's face attached to someone else's words. Both fall back to the
-category glyph offline.
+an `image` tag, so **businesses show no imagery at all** - a business renders
+as its category glyph on a category-coloured tile. Experiences get generated
+DiceBear avatars - illustrations rather than a stranger's face attached to
+someone else's words - and fall back to the same glyph if that fetch fails.
 
-> The `STOCK` badge is load-bearing. "King of Gyro" is a real restaurant, and
-> an unlabelled stock photo of someone else's kitchen misrepresents them.
-> Delete this whole module the moment there is a real `photoUrl`.
+> This was category stock photography from loremflickr behind a small `STOCK`
+> badge, and the badge was load-bearing: "King of Gyro" is a real restaurant,
+> and an unlabelled stock photo of someone else's kitchen misrepresents them.
+> Then loremflickr went dark - TCP connect timing out on both `:80` and `:443`
+> while every other CDN in the app answered normally - and every business tile
+> sat blank waiting on a request that never resolved. A glyph needs no network,
+> cannot fail mid-demo, and makes no claim about the premises at all. Bring
+> photography back only when there is a real `photoUrl` to show.
 
 ## Seeding Real Data
 

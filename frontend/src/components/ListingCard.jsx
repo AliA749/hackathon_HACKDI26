@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { displayTitle, isExperience, metaFor } from "../constants/categories.js";
-import { avatarFor, photoIsRepresentative } from "../utils/media.js";
+import { avatarFor } from "../utils/media.js";
 import { initials, timeAgo } from "../utils/time.js";
 
 export default function ListingCard({ listing, active, onSelect, onDelete }) {
@@ -53,16 +53,17 @@ export default function ListingCard({ listing, active, onSelect, onDelete }) {
 		>
 			<div className="flex gap-3">
 				{/*
-				  Businesses get a category-appropriate stock image, experiences a
-				  generated avatar (see utils/media.js). The category glyph stays
-				  as the fallback whenever the network image fails, so a card is
-				  never a blank grey box offline.
+				  The category glyph on a category-coloured tile is what a business
+				  shows - there is no business photo to show (see utils/media.js).
+				  Experiences layer a generated avatar over that same glyph, so if
+				  the avatar fails to load the tile is still a finished-looking
+				  thing rather than a blank grey box.
 				*/}
 				<div
 					className="relative w-24 h-24 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden"
 					style={{ background: meta.ink, color: meta.on }}
 				>
-					{!imageFailed && (
+					{image && !imageFailed && (
 						<img
 							className="absolute inset-0 w-full h-full object-cover"
 							src={image}
@@ -72,17 +73,6 @@ export default function ListingCard({ listing, active, onSelect, onDelete }) {
 						/>
 					)}
 					<span className="material-symbols-outlined text-[34px]" aria-hidden="true">{meta.icon}</span>
-
-					{/* Says out loud that a business image only suggests the category
-					    rather than showing the actual premises. */}
-					{!imageFailed && photoIsRepresentative(listing) && (
-						<span
-							className="absolute bottom-0 inset-x-0 bg-inverse-surface/70 text-[8px] leading-[11px] text-center text-white font-semibold uppercase tracking-wide py-0.5"
-							title="Representative image, not a photo of this business"
-						>
-							Stock
-						</span>
-					)}
 				</div>
 
 				<div className="flex-1 min-w-0 flex flex-col justify-between">

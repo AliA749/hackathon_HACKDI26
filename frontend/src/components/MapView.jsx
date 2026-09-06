@@ -249,6 +249,10 @@ function ListingPopup({ listing }) {
 	const meta = metaFor(listing);
 	const posted = timeAgo(listing.createdAt);
 	const experience = isExperience(listing);
+	// Businesses have no image at all, so this is null for them and the circle
+	// falls through to the owner's initials - which is what it is standing next
+	// to anyway. Only experiences carry a generated avatar.
+	const image = avatarFor(listing, 96);
 	const [imageFailed, setImageFailed] = useState(false);
 
 	return (
@@ -259,16 +263,16 @@ function ListingPopup({ listing }) {
 						className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[13px] flex-shrink-0 overflow-hidden"
 						style={{ background: meta.ink, color: meta.on }}
 					>
-						{imageFailed ? (
-							initials(listing.ownerName)
-						) : (
+						{image && !imageFailed ? (
 							<img
 								className="w-full h-full object-cover"
-								src={avatarFor(listing, 96)}
+								src={image}
 								alt=""
 								loading="lazy"
 								onError={() => setImageFailed(true)}
 							/>
+						) : (
+							initials(listing.ownerName)
 						)}
 					</span>
 					<div className="min-w-0">
