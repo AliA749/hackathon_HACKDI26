@@ -1,9 +1,46 @@
-import { categoryMeta } from "../constants/categories.js";
+import { useState } from "react";
+import { displayTitle, isExperience, metaFor } from "../constants/categories.js";
+import { avatarFor, photoIsRepresentative } from "../utils/media.js";
 import { initials, timeAgo } from "../utils/time.js";
 
-export default function ListingCard({ listing, active, onSelect }) {
-	const meta = categoryMeta(listing.category);
+export default function ListingCard({ listing, active, onSelect, onDelete }) {
+	const meta = metaFor(listing);
 	const posted = timeAgo(listing.createdAt);
+	const experience = isExperience(listing);
+	const image = avatarFor(listing, 200);
+	const [imageFailed, setImageFailed] = useState(false);
+
+	// An experience has no business name, so its headline is the person. That
+	// is the whole point of the kind: it is somebody's account of a place, not
+	// a listing for one.
+	const headline = experience ? listing.ownerName : listing.businessName;
+
+	// Two-step confirm rather than window.confirm(): the delete is permanent,
+	// there is no undo and no ownership check, so a single stray click on a
+	// touch screen should not be able to destroy someone's listing. Kept inline
+	// so it matches the rest of the UI instead of a native browser dialog.
+	const [confirming, setConfirming] = useState(false);
+	const [deleting, setDeleting] = useState(false);
+
+	// Every control inside the card has to stop propagation: the <article>
+	// itself is the "fly to this pin" click target.
+	const swallow = (event) => {
+		event.stopPropagation();
+	};
+
+	const handleDelete = async (event) => {
+		swallow(event);
+		setDeleting(true);
+		try {
+			await onDelete(listing);
+		}
+		catch {
+			// useListings restores the card and puts the reason in the status
+			// line; just re-arm the button here.
+			setDeleting(false);
+			setConfirming(false);
+		}
+	};
 
 	return (
 		<article
@@ -15,14 +52,37 @@ export default function ListingCard({ listing, active, onSelect }) {
 			onClick={() => onSelect(listing)}
 		>
 			<div className="flex gap-3">
-				{/* The mock puts a business photo here. No photo field exists, so the
-				    tile carries the category mark in that category's colour. */}
+				{/*
+				  Businesses get a category-appropriate stock image, experiences a
+				  generated avatar (see utils/media.js). The category glyph stays
+				  as the fallback whenever the network image fails, so a card is
+				  never a blank grey box offline.
+				*/}
 				<div
-					className="relative w-24 h-24 rounded-xl flex-shrink-0 flex items-center justify-center"
+					className="relative w-24 h-24 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden"
 					style={{ background: meta.ink, color: meta.on }}
-					aria-hidden="true"
 				>
-					<span className="material-symbols-outlined text-[34px]">{meta.icon}</span>
+					{!imageFailed && (
+						<img
+							className="absolute inset-0 w-full h-full object-cover"
+							src={image}
+							alt=""
+							loading="lazy"
+							onError={() => setImageFailed(true)}
+						/>
+					)}
+					<span className="material-symbols-outlined text-[34px]" aria-hidden="true">{meta.icon}</span>
+
+					{/* Says out loud that a business image only suggests the category
+					    rather than showing the actual premises. */}
+					{!imageFailed && photoIsRepresentative(listing) && (
+						<span
+							className="absolute bottom-0 inset-x-0 bg-inverse-surface/70 text-[8px] leading-[11px] text-center text-white font-semibold uppercase tracking-wide py-0.5"
+							title="Representative image, not a photo of this business"
+						>
+							Stock
+						</span>
+					)}
 				</div>
 
 				<div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -34,13 +94,29 @@ export default function ListingCard({ listing, active, onSelect }) {
 							>
 								{meta.label}
 							</span>
-							{posted && (
-								<span className="text-[11px] text-outline whitespace-nowrap">{posted}</span>
-							)}
+							<span className="flex items-center gap-1 flex-shrink-0">
+								{posted && (
+									<span className="text-[11px] text-outline whitespace-nowrap">{posted}</span>
+								)}
+								{!confirming && (
+									<button
+										className="w-6 h-6 rounded-full flex items-center justify-center text-outline opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-error-container hover:text-on-error-container transition-all"
+										type="button"
+										title={`Delete ${displayTitle(listing)}`}
+										aria-label={`Delete ${displayTitle(listing)}`}
+										onClick={(event) => {
+											swallow(event);
+											setConfirming(true);
+										}}
+									>
+										<span className="material-symbols-outlined text-[15px]" aria-hidden="true">delete</span>
+									</button>
+								)}
+							</span>
 						</div>
 
 						<h3 className="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors truncate">
-							{listing.businessName}
+							{headline}
 						</h3>
 
 						<p className="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 mt-0.5">
@@ -48,17 +124,25 @@ export default function ListingCard({ listing, active, onSelect }) {
 						</p>
 					</div>
 
+					{/* For an experience the headline is already the person's name, so
+					    repeating it down here would just be the same string twice. */}
 					<div className="flex items-center justify-between gap-2 pt-2">
-						<span className="flex items-center gap-1.5 min-w-0">
-							<span className="w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[9px] font-bold flex-shrink-0">
-								{initials(listing.ownerName)}
-							</span>
+						{experience ? (
 							<span className="font-label-md text-label-md text-on-surface-variant truncate">
-								{listing.ownerName}
+								shared what this area is like
 							</span>
-						</span>
+						) : (
+							<span className="flex items-center gap-1.5 min-w-0">
+								<span className="w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[9px] font-bold flex-shrink-0">
+									{initials(listing.ownerName)}
+								</span>
+								<span className="font-label-md text-label-md text-on-surface-variant truncate">
+									{listing.ownerName}
+								</span>
+							</span>
+						)}
 
-						{listing.websiteUrl && (
+						{!experience && listing.websiteUrl && (
 							<a
 								className="font-label-tag text-label-tag text-primary hover:underline flex items-center gap-0.5 flex-shrink-0"
 								href={listing.websiteUrl}
@@ -73,6 +157,34 @@ export default function ListingCard({ listing, active, onSelect }) {
 					</div>
 				</div>
 			</div>
+
+			{confirming && (
+				<div className="mt-3 pt-3 border-t border-error/20 flex items-center gap-2">
+					<p className="flex-1 min-w-0 font-body-sm text-body-sm text-on-surface-variant">
+						{experience ? "Delete this experience? This cannot be undone." : "Delete this listing? This cannot be undone."}
+					</p>
+					<button
+						className="h-8 px-3 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors flex-shrink-0 disabled:opacity-50"
+						type="button"
+						disabled={deleting}
+						onClick={(event) => {
+							swallow(event);
+							setConfirming(false);
+						}}
+					>
+						Cancel
+					</button>
+					<button
+						className="h-8 px-3 rounded-lg bg-error text-on-error font-label-md text-label-md font-semibold hover:brightness-110 transition-all flex-shrink-0 disabled:opacity-50 flex items-center gap-1"
+						type="button"
+						disabled={deleting}
+						onClick={handleDelete}
+					>
+						<span className="material-symbols-outlined text-[15px]" aria-hidden="true">delete</span>
+						{deleting ? "Deleting..." : "Delete"}
+					</button>
+				</div>
+			)}
 		</article>
 	);
 }

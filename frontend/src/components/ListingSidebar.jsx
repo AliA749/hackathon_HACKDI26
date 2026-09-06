@@ -1,14 +1,26 @@
 import ListingCard from "./ListingCard.jsx";
+import { isExperience } from "../constants/categories.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export default function ListingSidebar({ listings, status, activeId, onSelect }) {
+export default function ListingSidebar({ listings, status, activeId, onSelect, onDelete }) {
 	// The mock hardcodes "3 community check-ins in the last 15m". This counts
 	// the real listings instead, so the number always tells the truth.
 	const recent = listings.filter((listing) => {
 		const created = new Date(listing.createdAt).getTime();
 		return !Number.isNaN(created) && Date.now() - created < DAY_MS;
 	}).length;
+
+	// The list can be all businesses, all experiences, or a mix, so the banner
+	// cannot hardcode "businesses" - with the Experiences filter on it would
+	// have been counting experiences and calling them businesses.
+	const experiences = listings.filter(isExperience).length;
+	const noun =
+		experiences === 0
+			? listings.length === 1 ? "business" : "businesses"
+			: experiences === listings.length
+				? listings.length === 1 ? "experience" : "experiences"
+				: "pins";
 
 	return (
 		<aside
@@ -23,7 +35,7 @@ export default function ListingSidebar({ listings, status, activeId, onSelect })
 							<span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary"></span>
 						</span>
 						<span className="font-label-md text-label-md font-semibold tracking-tight truncate">
-							{listings.length} {listings.length === 1 ? "business" : "businesses"} in this view
+							{listings.length} {noun} in this view
 							{recent > 0 && ` · ${recent} added today`}
 						</span>
 					</div>
@@ -48,7 +60,7 @@ export default function ListingSidebar({ listings, status, activeId, onSelect })
 						<span className="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-outline">
 							<span className="material-symbols-outlined text-[28px]" aria-hidden="true">location_off</span>
 						</span>
-						<p className="font-label-lg text-label-lg text-on-surface">No businesses in this view</p>
+						<p className="font-label-lg text-label-lg text-on-surface">Nothing in this view</p>
 						<p className="font-body-sm text-body-sm text-on-surface-variant">
 							Pan the map, clear the filters, or click anywhere in New Jersey to add the first pin.
 						</p>
@@ -60,6 +72,7 @@ export default function ListingSidebar({ listings, status, activeId, onSelect })
 							listing={listing}
 							active={listing.id === activeId}
 							onSelect={onSelect}
+							onDelete={onDelete}
 						/>
 					))
 				)}
@@ -68,7 +81,7 @@ export default function ListingSidebar({ listings, status, activeId, onSelect })
 			<div className="p-3 bg-surface-container-lowest/90 backdrop-blur-md shadow-[0_-4px_16px_rgba(13,92,70,0.06)] flex items-center gap-2 flex-shrink-0">
 				<p className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl bg-surface-container-low text-on-surface-variant font-label-md text-label-md text-center px-2">
 					<span className="material-symbols-outlined text-[18px] text-primary" aria-hidden="true">touch_app</span>
-					Click the map to add a business
+					Click the map to add a pin
 				</p>
 			</div>
 		</aside>

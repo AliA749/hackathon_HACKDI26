@@ -7,6 +7,7 @@ public record BusinessListingResponse(
 		String ownerName,
 		String businessName,
 		BusinessCategory category,
+		PostKind kind,
 		String comment,
 		String websiteUrl,
 		Double latitude,

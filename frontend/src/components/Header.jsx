@@ -1,5 +1,5 @@
 import SearchBar from "./SearchBar.jsx";
-import { CATEGORIES } from "../constants/categories.js";
+import { EXPERIENCE, EXPERIENCE_CATEGORY, SERVICE, SERVICE_CATEGORIES } from "../constants/categories.js";
 
 /*
  * The inspiration header carries a nav (Directory / Community Feed / Saved)
@@ -7,7 +7,7 @@ import { CATEGORIES } from "../constants/categories.js";
  * dead links the second row is the real category filter - same visual rhythm,
  * and it actually drives the query.
  */
-export default function Header({ activeCategory, onCategory, onSearch, onAddClick }) {
+export default function Header({ activeCategory, activeKind, onCategory, onKind, onSearch, onAddClick }) {
 	return (
 		<header className="flex-shrink-0 w-full z-50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_12px_rgba(13,92,70,0.06)]">
 			<div className="h-20 w-full px-margin-tablet xl:px-margin-desktop flex items-center justify-between gap-gutter-base">
@@ -38,53 +38,111 @@ export default function Header({ activeCategory, onCategory, onSearch, onAddClic
 						onClick={onAddClick}
 					>
 						<span className="material-symbols-outlined text-[20px]" aria-hidden="true">add_circle</span>
-						<span className="font-label-lg text-label-lg hidden md:inline">Add a business</span>
+						<span className="font-label-lg text-label-lg hidden md:inline">Add a pin</span>
 					</button>
 				</div>
 			</div>
 
-			<div className="w-full bg-surface-container-lowest px-margin-tablet xl:px-margin-desktop py-2.5 flex items-center gap-gutter-sm overflow-x-auto scrollbar-none">
+			{/*
+			  Two rows because there are two things to choose, and folding them
+			  into one strip made "Experience" look like a ninth kind of shop.
+			  Row one picks what you are looking for at all; row two narrows a
+			  business search by trade, and is irrelevant to experiences - which
+			  have no sub-categories - so it hides itself in that mode.
+			*/}
+			<div className="w-full bg-surface-container-lowest px-margin-tablet xl:px-margin-desktop pt-2.5 flex items-center gap-gutter-sm overflow-x-auto scrollbar-none">
 				<span className="font-label-tag text-label-tag text-outline uppercase tracking-wider whitespace-nowrap mr-2">
-					Explore:
+					Looking for:
 				</span>
 
 				<button
 					className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors ${
-						activeCategory
-							? "bg-surface-container text-on-surface hover:bg-surface-container-high"
-							: "bg-primary text-on-primary"
+						activeKind ? "bg-surface-container text-on-surface hover:bg-surface-container-high" : "bg-primary text-on-primary"
 					}`}
 					type="button"
-					onClick={() => onCategory(undefined)}
+					onClick={() => onKind(undefined)}
 				>
-					All Places
+					Everything
 				</button>
 
-				{CATEGORIES.map((category) => {
-					const active = activeCategory === category.value;
-					return (
-						<button
-							key={category.value}
-							className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors ${
-								active
-									? "bg-primary text-on-primary"
-									: "bg-surface-container text-on-surface hover:bg-surface-container-high"
-							}`}
-							type="button"
-							onClick={() => onCategory(active ? undefined : category.value)}
-						>
-							<span
-								className="material-symbols-outlined text-[15px]"
-								style={active ? undefined : { color: category.ink }}
-								aria-hidden="true"
-							>
-								{category.icon}
-							</span>
-							{category.label}
-						</button>
-					);
-				})}
+				<button
+					className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors ${
+						activeKind === SERVICE
+							? "bg-primary text-on-primary"
+							: "bg-surface-container text-on-surface hover:bg-surface-container-high"
+					}`}
+					type="button"
+					aria-pressed={activeKind === SERVICE}
+					onClick={() => onKind(activeKind === SERVICE ? undefined : SERVICE)}
+				>
+					<span className="material-symbols-outlined text-[15px]" aria-hidden="true">storefront</span>
+					Businesses
+				</button>
+
+				<button
+					className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors ${
+						activeKind === EXPERIENCE ? "text-white" : "bg-surface-container text-on-surface hover:bg-surface-container-high"
+					}`}
+					style={activeKind === EXPERIENCE ? { background: EXPERIENCE_CATEGORY.ink, color: EXPERIENCE_CATEGORY.on } : undefined}
+					type="button"
+					aria-pressed={activeKind === EXPERIENCE}
+					onClick={() => onKind(activeKind === EXPERIENCE ? undefined : EXPERIENCE)}
+				>
+					<span
+						className="material-symbols-outlined text-[15px]"
+						style={activeKind === EXPERIENCE ? undefined : { color: EXPERIENCE_CATEGORY.ink }}
+						aria-hidden="true"
+					>
+						{EXPERIENCE_CATEGORY.icon}
+					</span>
+					Experiences
+				</button>
 			</div>
+
+			{activeKind !== EXPERIENCE && (
+				<div className="w-full bg-surface-container-lowest px-margin-tablet xl:px-margin-desktop py-2.5 flex items-center gap-gutter-sm overflow-x-auto scrollbar-none">
+					<span className="font-label-tag text-label-tag text-outline uppercase tracking-wider whitespace-nowrap mr-2">
+						Trade:
+					</span>
+
+					<button
+						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors ${
+							activeCategory
+								? "bg-surface-container text-on-surface hover:bg-surface-container-high"
+								: "bg-primary text-on-primary"
+						}`}
+						type="button"
+						onClick={() => onCategory(undefined)}
+					>
+						All Places
+					</button>
+
+					{SERVICE_CATEGORIES.map((category) => {
+						const active = activeCategory === category.value;
+						return (
+							<button
+								key={category.value}
+								className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors ${
+									active
+										? "bg-primary text-on-primary"
+										: "bg-surface-container text-on-surface hover:bg-surface-container-high"
+								}`}
+								type="button"
+								onClick={() => onCategory(active ? undefined : category.value)}
+							>
+								<span
+									className="material-symbols-outlined text-[15px]"
+									style={active ? undefined : { color: category.ink }}
+									aria-hidden="true"
+								>
+									{category.icon}
+								</span>
+								{category.label}
+							</button>
+						);
+					})}
+				</div>
+			)}
 		</header>
 	);
 }

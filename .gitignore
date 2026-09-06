@@ -1,1 +1,4 @@
 starter.zip
+
+# Server logs written by start-dev.ps1
+.dev-logs/

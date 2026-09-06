@@ -7,6 +7,7 @@ import { useListings } from "./hooks/useListings.js";
 import { fetchNjBoundary } from "./api/geo.js";
 import { containsPoint } from "./utils/geometry.js";
 import { NJ_BOUNDS } from "./constants/bounds.js";
+import { EXPERIENCE, displayTitle, isExperience } from "./constants/categories.js";
 
 function toBoundsParams(bounds) {
 	return {
@@ -18,10 +19,11 @@ function toBoundsParams(bounds) {
 }
 
 export default function App() {
-	const { listings, status, setStatus, loadListings, addListing } = useListings();
+	const { listings, status, setStatus, loadListings, addListing, removeListing } = useListings();
 	const [pendingPosition, setPendingPosition] = useState(null);
 	const [composerOpen, setComposerOpen] = useState(false);
 	const [category, setCategory] = useState(undefined);
+	const [kind, setKind] = useState(undefined);
 	const [activeId, setActiveId] = useState(null);
 	const [toast, setToast] = useState(null);
 	const [boundary, setBoundary] = useState(null);
@@ -31,7 +33,7 @@ export default function App() {
 	// Filters live in a ref as well as state: the map's moveend handler is
 	// registered once and would otherwise close over the filter values from the
 	// render in which it was created, silently dropping the active category.
-	const filterRef = useRef({ query: undefined, category: undefined });
+	const filterRef = useRef({ query: undefined, category: undefined, kind: undefined });
 
 	const handleBoundsChange = useCallback(
 		(bounds) => {
@@ -103,6 +105,21 @@ export default function App() {
 		[reload]
 	);
 
+	// Switching to Experiences clears any trade filter: experiences have no
+	// trade, so leaving "Barber" applied would return nothing and look broken.
+	const handleKind = useCallback(
+		(next) => {
+			setKind(next);
+			if (next === EXPERIENCE) {
+				setCategory(undefined);
+				reload({ kind: next, category: undefined });
+				return;
+			}
+			reload({ kind: next });
+		},
+		[reload]
+	);
+
 	const handleCreate = useCallback(
 		async (payload) => {
 			const created = await addListing(payload);
@@ -127,6 +144,17 @@ export default function App() {
 		}
 	}, []);
 
+	const handleDeleteListing = useCallback(
+		async (listing) => {
+			await removeListing(listing);
+			// Clearing this matters: a stale activeId would keep re-applying the
+			// "selected" ring to whichever listing later reuses that id.
+			setActiveId((current) => (current === listing.id ? null : current));
+			setToast((current) => (current?.id === listing.id ? null : current));
+		},
+		[removeListing]
+	);
+
 	const closeComposer = useCallback(() => {
 		setComposerOpen(false);
 		setPendingPosition(null);
@@ -136,9 +164,11 @@ export default function App() {
 		<div className="w-full h-full flex flex-col bg-surface overflow-hidden">
 			<Header
 				activeCategory={category}
+				activeKind={kind}
 				onCategory={handleCategory}
+				onKind={handleKind}
 				onSearch={handleSearch}
-				onAddClick={() => setStatus("Click anywhere inside New Jersey to place your pin.")}
+				onAddClick={() => setStatus("Click anywhere inside New Jersey - then choose a business or an experience.")}
 			/>
 
 			{/*
@@ -153,6 +183,7 @@ export default function App() {
 					status={status}
 					activeId={activeId}
 					onSelect={handleSelectListing}
+					onDelete={handleDeleteListing}
 				/>
 
 				<main className="flex-1 min-w-0 h-full relative">
@@ -162,6 +193,7 @@ export default function App() {
 						pendingPin={pendingPosition}
 						onMapClick={handleMapClick}
 						onBoundsChange={handleBoundsChange}
+						onStatus={setStatus}
 						mapRef={mapRef}
 					/>
 				</main>
@@ -175,9 +207,11 @@ export default function App() {
 						<span className="material-symbols-outlined text-[20px]" aria-hidden="true">check_circle</span>
 					</span>
 					<div className="flex-1 min-w-0 pr-2">
-						<div className="font-label-md text-label-md font-bold text-on-surface">Published</div>
+						<div className="font-label-md text-label-md font-bold text-on-surface">
+							{isExperience(toast) ? "Shared" : "Published"}
+						</div>
 						<p className="font-body-sm text-body-sm text-on-surface-variant truncate">
-							<span className="font-semibold text-primary">{toast.businessName}</span> is on the map
+							<span className="font-semibold text-primary">{displayTitle(toast)}</span> is on the map
 						</p>
 					</div>
 					<button

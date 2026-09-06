@@ -43,18 +43,23 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
+		<!-- Only used by the `postgres` profile (see
+		     application-postgres.properties + docker-compose.yml). -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-		<!-- H2 is test-only now: it backs the fast in-memory contextLoads test so
-		     `mvn test` doesn't require a running Postgres instance. Runtime data
-		     lives in Postgres (see docker-compose.yml). -->
+		<!-- H2 is a RUNTIME dependency, not test-only, and that is deliberate:
+		     it is the default dev database, so `mvnw spring-boot:run` starts
+		     with no Docker daemon, no Postgres, and no flags. Making this
+		     test-scoped is what used to make a cold start fail twice before
+		     anyone got a working app. Swap to the `postgres` profile for a
+		     deployment that needs a real server. -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>test</scope>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
