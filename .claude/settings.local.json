@@ -4,7 +4,10 @@
       "Bash(gh api *)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npx skills *)",
-      "Bash(wsl.exe *)"
+      "Bash(wsl.exe *)",
+      "PowerShell(gh *)",
+      "PowerShell(git fetch *)",
+      "PowerShell(git *)"
     ]
   }
 }
