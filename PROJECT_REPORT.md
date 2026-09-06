@@ -22,7 +22,7 @@ Two kinds of pin share one map:
 | Website | optional | not asked, **rejected if sent** |
 | Categories | 8 trades (Food, Barber, …) | none — "experience" is the category |
 | Map pin | category glyph | text mark reading "Experience" |
-| Image | category stock photo, badged `STOCK` | generated avatar |
+| Image | none — category glyph tile | generated avatar |
 
 ---
 
@@ -115,7 +115,7 @@ frontend/src
 | OpenStreetMap (Overpass API) | Real halal business records | ODbL — reuse permitted **with attribution** |
 | Stadia Maps / OpenMapTiles | Basemap raster tiles | Keyless on localhost; free key for a public domain |
 | `unitedstates/districts` | NJ state outline GeoJSON | Public domain (US Census TIGER derived) |
-| loremflickr | Category stock photography | Placeholder only, badged `STOCK` |
+| ~~loremflickr~~ | Category stock photography | **Removed** — host went dark mid-build; businesses now render as category glyphs |
 | DiceBear | Generated avatars for experiences | Illustration, not a real person's face |
 
 ---
@@ -310,7 +310,8 @@ Stated plainly, because judges will find them anyway:
 - **`ddl-auto=update`** — not production-safe; needs Flyway or Liquibase.
 - **No frontend tests.**
 - **New Jersey only**, by design.
-- **Stock imagery**, badged `STOCK`; no real business photos exist in the data.
+- **No business imagery at all** — category glyphs only; no real business photos
+  exist in the data, and we removed the stock-photo stand-in rather than fake it.
 - **Search is `LIKE '%…%'` over two columns** with no pagination — fine at
   hundreds of rows, not at tens of thousands.
 

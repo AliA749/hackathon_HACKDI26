@@ -2,21 +2,6 @@ import L from "leaflet";
 import { isExperience, metaFor } from "../constants/categories.js";
 import { avatarFor } from "../utils/media.js";
 
-// The mock frames each pin with a contributor photo. We have no photos, so the
-// circle carries the poster's initials instead - same silhouette, real data.
-function initials(name) {
-	const parts = String(name || "")
-		.trim()
-		.split(/\s+/)
-		.filter(Boolean);
-	if (parts.length === 0) {
-		return "?";
-	}
-	const first = parts[0][0];
-	const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
-	return (first + last).toUpperCase();
-}
-
 function escapeHtml(value) {
 	return String(value ?? "").replace(
 		/[&<>"']/g,
@@ -48,7 +33,12 @@ export function experiencePin(listing) {
 				<div class="relative flex flex-col items-center" style="filter: drop-shadow(0 8px 16px rgba(109,59,122,0.28));">
 					<div class="relative w-[52px] h-[52px] p-1 rounded-full bg-white" style="box-shadow: inset 0 0 0 2px ${meta.ink};">
 						<img src="${avatar}" alt="" class="w-11 h-11 rounded-full object-cover"
-							style="background:${meta.on};" loading="lazy" />
+							style="background:${meta.on};" loading="lazy"
+							onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+						<div class="w-11 h-11 rounded-full items-center justify-center"
+							style="display:none;background:${meta.ink};color:${meta.on};">
+							<span class="material-symbols-outlined" style="font-size:24px;">${meta.icon}</span>
+						</div>
 					</div>
 					<div class="-mt-1 w-2.5 h-2.5 rotate-45 rounded-[1px] bg-white"
 						style="box-shadow: 2px 2px 0 0 ${meta.ink};"></div>
@@ -74,7 +64,6 @@ export function businessPin(listing) {
 
 	const meta = metaFor(listing);
 	const name = escapeHtml(listing.businessName ?? listing.ownerName);
-	const photo = escapeHtml(avatarFor(listing, 96));
 
 	return L.divIcon({
 		className: "pin-marker-icon",
@@ -82,15 +71,10 @@ export function businessPin(listing) {
 			<div class="relative flex flex-col items-center select-none group">
 				<div class="relative flex flex-col items-center" style="filter: drop-shadow(0 8px 16px rgba(13,92,70,0.22));">
 					<div class="relative w-[52px] h-[52px] p-1 rounded-full bg-white" style="box-shadow: inset 0 0 0 2px ${meta.ink};">
-						<img src="${photo}" alt="" class="w-11 h-11 rounded-full object-cover"
-							style="background:${meta.ink};" loading="lazy"
-							onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-						<div class="w-11 h-11 rounded-full items-center justify-center font-extrabold text-[15px]"
-							style="display:none;background:${meta.ink};color:${meta.on};">${escapeHtml(initials(listing.ownerName))}</div>
-						<span class="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full flex items-center justify-center shadow-md"
-							style="background:${meta.ink};color:${meta.on};box-shadow:0 0 0 2px #ffffff;">
-							<span class="material-symbols-outlined" style="font-size:13px;">${meta.icon}</span>
-						</span>
+						<div class="w-11 h-11 rounded-full flex items-center justify-center"
+							style="background:${meta.ink};color:${meta.on};">
+							<span class="material-symbols-outlined" style="font-size:24px;">${meta.icon}</span>
+						</div>
 					</div>
 					<div class="-mt-1 w-2.5 h-2.5 rotate-45 rounded-[1px] bg-white"
 						style="box-shadow: 2px 2px 0 0 ${meta.ink};"></div>

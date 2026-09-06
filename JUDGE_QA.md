@@ -191,14 +191,19 @@ store with one halal item is not a Muslim-owned or Muslim-serving local business
 and a screen of identical Wawa cards buries the businesses this app exists to
 surface. (The McDonald's tag is near-certainly a mis-tag.)
 
-**Q: Are those photos real?**
-**No, and we label them.** There is no photo field in the data and no imported OSM
-record carries an `image` tag. Business cards show a category-appropriate stock
-photo behind a small **`STOCK`** badge that says so; experiences get generated
-avatars rather than a stranger's face attached to someone else's words. Both fall
-back to the category glyph offline. "King of Gyro" is a real restaurant — an
-unlabelled stock photo of someone else's kitchen misrepresents them. The module is
-documented to be deleted the moment there's a real `photoUrl`.
+**Q: Why don't the businesses have photos?**
+**Because we don't have any, and we won't fake one.** There is no photo field in
+the data and no imported OSM record carries an `image` tag. A business renders as
+its category glyph on a coloured tile; experiences get generated avatars rather
+than a stranger's face attached to someone else's words.
+
+We did ship category stock photography for a while, behind a **`STOCK`** badge
+that said so — "King of Gyro" is a real restaurant, and an unlabelled photo of
+someone else's kitchen misrepresents them. Then the image host went dark
+mid-build and every business tile sat blank waiting on a TCP timeout. We replaced
+it with the glyph rather than re-point at another stock service: the glyph needs
+no network, can't fail during a demo, and makes no claim about the premises at
+all. Photography comes back when there's a real `photoUrl`.
 
 **Q: There's a `nj_muslim_businesses_api.json` in your repo. What is it?**
 An early dataset we **rejected and did not import.** Its `verification_source`
@@ -337,8 +342,8 @@ Yes — Claude Code, and it's visible in the repo (`.claude/`, `.agents/skills/`
 `skills-lock.json`). We'd rather say so than have someone find it. What it did
 *not* do is make the judgement calls: excluding chains, refusing to widen the
 halal query, rejecting the fabricated dataset, choosing OSM over Zabihah on
-licence grounds, and deciding the STOCK badge was load-bearing were all decisions
-we made and can defend. The measurements (6.6 s vs 7.7 s, the CDS rejection) are
+licence grounds, and dropping business photography rather than dressing real
+businesses in stock imagery were all decisions we made and can defend. The measurements (6.6 s vs 7.7 s, the CDS rejection) are
 real runs, not claims.
 
 **Q: What would you do differently?**
@@ -372,8 +377,8 @@ why we built anonymous posting rather than owner signup first.
 **"This is just a map with a form."**
 The map and the form took a day. The part that took judgement was deciding what
 we're *allowed* to put on it: which sources permit reuse, what `diet:halal=yes`
-actually means, whether an unlabelled stock photo of someone else's kitchen is
-acceptable next to a real restaurant's name. Those decisions are in the code and
+actually means, whether a stock photo of someone else's kitchen belongs next to a
+real restaurant's name (we decided it doesn't). Those decisions are in the code and
 the README, not just in this pitch.
 
 **"Your demo only has 29 businesses."**
@@ -395,7 +400,7 @@ listing. That's written into the PRD as a known gap, not discovered just now.
 
 - Don't say the businesses are "verified" or "certified halal." They're
   OSM-tagged, and mostly `diet:halal=yes` = *has halal options*.
-- Don't say the photos are of the businesses. They're stock, badged `STOCK`.
+- Don't promise business photos. There are none — tiles are category glyphs.
 - Don't cite `nj_muslim_businesses_api.json` as a data source.
 - Don't call the two-step delete confirm a security control.
 - Don't quote a startup number you haven't just measured on the demo machine.
