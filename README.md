@@ -225,6 +225,27 @@ first run produced:
 > County Muslim Business Network" that do not appear to exist. Don't import it
 > or cite it in the demo without checking each row by hand.
 
+## Seeding Experiences
+
+```powershell
+node tools/seed-experiences.mjs --dry-run   # preview
+node tools/seed-experiences.mjs             # seed
+node tools/seed-experiences.mjs --purge     # undo (only rows this tool created)
+```
+
+Posts **16 experience pins** across towns with established Muslim communities -
+Paterson, Clifton, Passaic, Jersey City, Newark, Elizabeth, Bayonne, Teaneck,
+Paramus, Edison, Piscataway, New Brunswick, Franklin Township, Princeton,
+Cherry Hill, Toms River. Without these the map is all businesses and the
+two-kinds-of-pin feature above renders nothing until somebody posts one live.
+Safe to re-run: an owner name already present as an experience is skipped.
+
+> **This content is written, not collected.** No real person said any of it and
+> it is not a survey result. Don't present it as user-submitted data or quote it
+> as evidence about a town. The tone is deliberately mixed rather than uniformly
+> positive - a few entries name real friction, because all-glowing testimonials
+> read as marketing copy. Keep that balance if you add more.
+
 ## Notable Decisions
 
 - **No login/signup.** Posting is anonymous-by-name (`ownerName` is free
